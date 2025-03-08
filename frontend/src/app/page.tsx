@@ -13,11 +13,11 @@ export default function Home() {
     const response = await fetch("/api/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: email, company: "Test Company", industry: "SaaS" }),
+      body: JSON.stringify({ email }),
     });
 
     const data = await response.json();
-    setMessage(data.message || "You're signed up!");
+    setMessage("🎉 You're In! What’s Next?");
     setEmail("");
   };
 
@@ -25,12 +25,12 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white flex flex-col items-center justify-center px-6">
       {/* Top Navigation */}
       <nav className="absolute top-0 w-full flex justify-between px-8 py-4">
-        <h1 className="text-2xl font-bold">Bruce Leads</h1>
+        <Image src="/logo.png" alt="Bruce Leads" width={150} height={50} />
         <button
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/admin")}
           className="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-bold rounded-lg transition-all"
         >
-          Login
+          Demo Login
         </button>
       </nav>
 
@@ -60,38 +60,62 @@ export default function Home() {
             Get Early Access
           </button>
         </form>
-        {message && <p className="mt-4 text-green-400">{message}</p>}
+
+        {/* Post-Signup Options */}
+        {message && (
+          <div className="mt-6 flex flex-col items-center gap-4">
+            <p className="text-green-400 text-lg font-semibold">{message}</p>
+            <button
+              onClick={() => router.push("/demo")}
+              className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-all"
+            >
+              Try Bruce Leads
+            </button>
+            <button
+              onClick={() => router.push("/get-free-leads")}
+              className="px-6 py-3 bg-blue-500 hover:bg-blue-700 text-white font-bold rounded-lg transition-all"
+            >
+              Get Free Leads
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Features Section */}
       <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl text-center">
         <div className="p-6 bg-gray-800 border border-yellow-500 rounded-lg shadow-lg hover:scale-105 transition-all">
           <h3 className="text-xl font-semibold flex items-center justify-center gap-2">
-            🔍 Set Your ICP
+            🔍 Find High-Intent Triggers
           </h3>
-          <p className="text-gray-400 mt-2">Define your ideal leads with precision.</p>
+          <p className="text-gray-400 mt-2">We scan reports, news, and signals to tell you WHY this lead is ready to buy NOW.</p>
         </div>
         <div className="p-6 bg-gray-800 border border-yellow-500 rounded-lg shadow-lg hover:scale-105 transition-all">
           <h3 className="text-xl font-semibold flex items-center justify-center gap-2">
-            📡 Get Intent-Based Alerts
+            📡 Get Smart Insights
           </h3>
-          <p className="text-gray-400 mt-2">Stay ahead with real-time funding & hiring signals.</p>
+          <p className="text-gray-400 mt-2">Funding rounds, hiring trends, competitor analysis—all automated.</p>
         </div>
         <div className="p-6 bg-gray-800 border border-yellow-500 rounded-lg shadow-lg hover:scale-105 transition-all">
           <h3 className="text-xl font-semibold flex items-center justify-center gap-2">
             🤖 AI-Powered Outreach
           </h3>
-          <p className="text-gray-400 mt-2">Engage leads with **AI-generated messaging**.</p>
+          <p className="text-gray-400 mt-2">Use AI-generated messaging based on the exact context of why they should buy.</p>
         </div>
       </div>
 
       {/* CTA Section */}
       <div className="mt-12 flex gap-6">
-        <button className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-lg rounded-lg shadow-lg transition-all">
+        <button
+          onClick={() => router.push("/demo")}
+          className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-lg rounded-lg shadow-lg transition-all"
+        >
           Try Bruce Leads
         </button>
-        <button className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg rounded-lg shadow-lg transition-all">
-          Get Free Free
+        <button
+          onClick={() => router.push("/get-free-leads")}
+          className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg rounded-lg shadow-lg transition-all"
+        >
+          Get Free Leads
         </button>
       </div>
 
