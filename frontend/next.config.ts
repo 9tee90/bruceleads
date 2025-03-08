@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "export", // Change from "standalone" to "export"
+  output: "standalone", // ✅ Fix: Use standalone to support API routes
   distDir: ".next",
 };
 
