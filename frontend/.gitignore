@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# Ignore Firebase Admin JSON
+src/config/firebaseAdmin.json
+
