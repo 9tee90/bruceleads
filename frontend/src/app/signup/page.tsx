@@ -1,6 +1,6 @@
 export default function Signup() {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <h1 className="text-3xl font-bold">Sign Up for Bruce Leads</h1>
         <p className="text-gray-600">Create an account to access AI-powered B2B leads.</p>
         <form className="mt-6 flex flex-col">

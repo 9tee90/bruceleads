@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import AITriggerAnimation from "./components/AITriggerAnimation";
 
 const companies = [
-  { name: "Salesforce", logo: "/logos/salesforce.png" },
+  { name: "Salesforce", logo: "/logos/Salesforce.png" },
   { name: "Adobe", logo: "/logos/adobe.png" },
   { name: "Microsoft", logo: "/logos/microsoft.png" },
   { name: "LinkedIn", logo: "/logos/linkedin.png" },
@@ -38,7 +38,7 @@ export default function Home() {
         <div className="mt-8 flex gap-4 justify-center">
           <button
             onClick={() => router.push("/signup")}
-            className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-lg rounded-lg shadow-lg transition-all"
+            className="px-6 py-3 bg-green-500 hover:bg-green-700 text-black font-bold text-lg rounded-lg shadow-lg transition-all"
           >
             🚀 Request Early Access & Close More Deals
           </button>
@@ -63,19 +63,19 @@ export default function Home() {
         <motion.div className="p-6 bg-gray-800 border border-yellow-500 rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold">🌎 Global Sales Intelligence</h3>
           <p className="text-gray-400 mt-2">
-            Track high-intent buying signals from **funding rounds, job changes, & tech adoption** in the US, EU, Middle East, APAC, & LATAM.
+            Track high-intent buying signals from <strong>funding rounds, job changes, & tech adoption</strong> in the US, EU, Middle East, APAC, & LATAM.
           </p>
         </motion.div>
         <motion.div className="p-6 bg-gray-800 border border-blue-500 rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold">🚀 Automated Lead Scoring</h3>
           <p className="text-gray-400 mt-2">
-            AI ranks leads based on trigger strength & urgency, ensuring you **only contact the right prospects at the right time.**
+            AI ranks leads based on trigger strength & urgency, ensuring you <strong>only contact the right prospects at the right time.</strong>
           </p>
         </motion.div>
         <motion.div className="p-6 bg-gray-800 border border-green-500 rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold">🤖 AI-Powered Outreach</h3>
           <p className="text-gray-400 mt-2">
-            Auto-generate **highly relevant LinkedIn, Email, and Call Scripts**—personalized for every lead.
+            Auto-generate <strong>highly relevant LinkedIn, Email, and Call Scripts</strong>—personalized for every lead.
           </p>
         </motion.div>
       </div>

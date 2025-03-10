@@ -1,94 +1,80 @@
 "use client";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-interface Lead {
-  name: string;
-  funding: string;
-  hiring: string;
-  score: number;
-}
+import { useState, useEffect } from "react";
+import AITriggerAnimation from "../components/AITriggerAnimation";
 
 export default function Dashboard() {
   const router = useRouter();
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState("all");
 
-  // Fetch Leads from API
-  const fetchLeads = async () => {
-    setLoading(true);
-    const response = await fetch("/api/leads");
-    const data = await response.json();
-    setLeads(data.leads);
-    setLoading(false);
-  };
+  // Mock lead data (replace with API later)
+  const [leads, setLeads] = useState([
+    { name: "Acme Corp", intent: "92%" },
+    { name: "Beta Industries", intent: "85%" },
+    { name: "Gamma Solutions", intent: "78%" },
+  ]);
 
+  // Simulate AI updating leads
   useEffect(() => {
-    fetchLeads();
+    const interval = setInterval(() => {
+      setLeads((prevLeads) => [
+        ...prevLeads,
+        { name: `New Lead ${prevLeads.length + 1}`, intent: `${Math.floor(Math.random() * 100)}%` },
+      ]);
+    }, 5000); // Add a new lead every 5 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
-  // Filter Leads
-  const filteredLeads = leads.filter((lead) => {
-    if (filter === "high-score") return lead.score > 50;
-    if (filter === "funded") return lead.funding !== "N/A";
-    return true;
-  });
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-6">
-      <h1 className="text-4xl font-bold text-yellow-500">🚀 Your Sales Dashboard</h1>
-      <p className="text-lg text-gray-300 mt-4">View and manage your AI-sourced high-intent leads.</p>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center px-6">
+      {/* Dashboard Header */}
+      <h1 className="text-4xl font-bold text-yellow-400 mt-10">🚀 AI Command Center</h1>
+      <p className="text-lg text-gray-300 mt-4 text-center">
+        Your leads are ranked, prioritized, and ready for engagement.
+      </p>
 
-      {/* Filters */}
-      <div className="mt-6 flex gap-4">
-        <button
-          onClick={() => setFilter("all")}
-          className={`px-4 py-2 rounded-md ${filter === "all" ? "bg-blue-500" : "bg-gray-700"}`}
-        >
-          All Leads
-        </button>
-        <button
-          onClick={() => setFilter("high-score")}
-          className={`px-4 py-2 rounded-md ${filter === "high-score" ? "bg-blue-500" : "bg-gray-700"}`}
-        >
-          High-Score Leads
-        </button>
-        <button
-          onClick={() => setFilter("funded")}
-          className={`px-4 py-2 rounded-md ${filter === "funded" ? "bg-blue-500" : "bg-gray-700"}`}
-        >
-          Funded Companies
-        </button>
+      {/* AI Detection Animation */}
+      <div className="w-full max-w-3xl mt-8">
+        <AITriggerAnimation />
       </div>
 
-      {/* Lead List */}
-      <div className="mt-6 w-full max-w-4xl">
-        {loading ? (
-          <p className="text-gray-400">Loading leads...</p>
-        ) : filteredLeads.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredLeads.map((lead, index) => (
-              <div key={index} className="p-4 bg-gray-800 border border-yellow-500 rounded-lg shadow-lg">
-                <h3 className="text-xl font-semibold text-yellow-500">{lead.name}</h3>
-                <p className="text-gray-300 mt-2">Funding: {lead.funding}</p>
-                <p className="text-gray-300">Hiring: {lead.hiring}</p>
-                <p className="text-yellow-400 font-bold">Score: {lead.score.toFixed(1)}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-400">No leads found.</p>
-        )}
+      {/* Detected Leads Section */}
+      <div className="mt-10 w-full max-w-3xl bg-gray-900 p-6 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold text-yellow-400">📌 Detected Leads</h2>
+        <p className="text-gray-400 mb-4">Live AI-detected leads appear here.</p>
+
+        <div className="space-y-2">
+          {leads.map((lead, index) => (
+            <div key={index} className="bg-gray-800 p-3 rounded-lg flex justify-between">
+              <span className="text-white">{lead.name}</span>
+              <span className="text-yellow-400 font-semibold">{lead.intent} Intent</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Logout Button */}
-      <button
-        onClick={() => router.push("/")}
-        className="mt-6 px-6 py-3 bg-red-500 hover:bg-red-700 text-white font-bold text-lg rounded-lg shadow-lg transition-all"
-      >
-        Logout
-      </button>
+      {/* Settings & Engagement Buttons */}
+      <div className="flex gap-4 mt-6">
+        <button 
+          onClick={() => router.push("/onboarding")}
+          className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-lg"
+        >
+          ⚙️ Adjust Preferences
+        </button>
+
+        <button 
+          onClick={() => router.push("/dashboard/settings")}
+          className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg"
+        >
+          🔧 Manage Settings
+        </button>
+
+        <button 
+          className="px-6 py-3 bg-green-500 hover:bg-green-600 text-black font-bold rounded-lg"
+        >
+          📩 Auto-Engage Leads
+        </button>
+      </div>
     </div>
   );
 }
