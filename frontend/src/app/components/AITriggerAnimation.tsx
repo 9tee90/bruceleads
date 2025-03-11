@@ -2,13 +2,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
-const defaultImage = "/logos/bruce-leads-logo.png"; // Fallback Bruce Leads logo
-
 const triggers = [
   {
     phase: "🔍 DETECT",
     image: "/animations/radar-pulse.gif",
-    description: "AI scans 50+ sources in real-time to uncover new sales opportunities.",
+    description: "Bruce scans 50+ sources in real-time to uncover new sales opportunities.",
     funMessage: "🔎 Bruce just spotted 12 new triggers!"
   },
   {
@@ -25,7 +23,7 @@ const triggers = [
   },
   {
     phase: "✍️ ENGAGE",
-    image: "/animations/message-creation.gif", // Corrected path
+    image: "/animations/message-creation.gif",
     description: "AI crafts tailored LinkedIn & Email outreach for every lead.",
     funMessage: "✍️ Bruce is drafting relevant outreach…"
   },
@@ -49,7 +47,7 @@ export default function AITriggerAnimation() {
 
   return (
     <motion.div
-      className="relative w-full max-w-2xl h-[520px] bg-black rounded-lg shadow-lg p-6 border border-yellow-500 flex flex-col items-center justify-between mt-16 overflow-hidden"
+      className="relative w-full max-w-2xl h-[520px] bg-gray-900 rounded-lg shadow-lg p-6 border border-yellow-500 flex flex-col items-center justify-between mt-16"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 1, delay: 0.4 }}
@@ -79,11 +77,11 @@ export default function AITriggerAnimation() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Animated Image (Perfectly Centered & Spaced) */}
+      {/* Animated Image */}
       <AnimatePresence mode="wait">
         <motion.img
           key={stepIndex}
-          src={triggers[stepIndex].image || defaultImage} // Ensure fallback works
+          src={triggers[stepIndex].image}
           alt={triggers[stepIndex].phase}
           className="w-48 h-48 object-cover rounded-lg shadow-lg mx-auto mt-4"
           initial={{ opacity: 0, scale: 0.9 }}
@@ -93,21 +91,7 @@ export default function AITriggerAnimation() {
         />
       </AnimatePresence>
 
-      {/* Explainer Text (Now Evenly Spaced & Readable) */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stepIndex}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.8 }}
-          className="text-center text-white w-full px-6 mt-4"
-        >
-          <p className="text-gray-300 text-lg">{triggers[stepIndex].description}</p>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Fun Dynamic Message (Properly Aligned & Styled) */}
+      {/* Dynamic Fun Message */}
       <AnimatePresence mode="wait">
         <motion.div
           key={stepIndex}

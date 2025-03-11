@@ -108,7 +108,7 @@ export default function HowItWorks() {
           Get Started Now
         </button>
         <button
-          onClick={() => window.open("https://calendly.com/bruceleads", "_blank")}
+          onClick={() => window.open("https://calendly.com/beyondbusinessgroup/30min", "_blank")}
           className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg rounded-lg shadow-lg transition-all"
         >
           Book a Call
