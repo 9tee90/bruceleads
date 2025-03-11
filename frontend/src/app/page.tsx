@@ -1,109 +1,133 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import AITriggerAnimation from "../app/components/AITriggerAnimation";
 import ComparisonTable from "../app/components/ComparisonTable";
 
 export default function Home() {
   const router = useRouter();
+  const [liveLeads, setLiveLeads] = useState(15002);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveLeads((prev) => prev + Math.floor(Math.random() * 10) + 1);
+    }, 1200);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-white flex flex-col items-center px-6">
+    <div className="bg-[#F8F9FA] text-black min-h-screen flex flex-col items-center px-6 font-sans">
       
-      {/* 🚀 AI-Powered Hero Section - Fully Polished */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center mt-16 max-w-5xl"
+      {/* 🚀 HERO SECTION */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.6 }} 
+        className="text-center mt-24 max-w-5xl"
       >
-        <h1 className="text-6xl font-extrabold text-yellow-400 leading-tight">
-          Bruce Leads: The AI Sales Sidekick
+        <h1 className="text-6xl font-bold text-gray-900 leading-tight">
+          <strong>Bruce Leads. You Close.</strong>
         </h1>
-        <p className="text-lg text-gray-300 mt-4 max-w-3xl mx-auto">
-          🚀 Find high-intent buyers before your competitors do. Bruce Leads scans <span className="text-yellow-400 font-bold">50+ market signals</span> to deliver timely, sales-ready leads—<span className="text-green-400 font-bold">zero guesswork.</span>
-        </p>
-        <p className="text-xl font-bold text-green-400 mt-4">
-          🔸 AI-Powered Triggers | No More 'Cold Outreach' | 10x Faster Prospecting
+        <p className="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">
+          AI-driven <strong>prospecting for recruiters & B2B sales teams.</strong>  
+          Find <strong>expanding companies, hiring surges, and funding rounds</strong>—then engage instantly.
         </p>
 
-        {/* 🎯 Action-Oriented CTAs */}
         <div className="mt-8 flex gap-4 justify-center">
           <button
-            onClick={() => router.push("/signup")}
-            className="px-8 py-4 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-xl rounded-lg shadow-lg transition-all"
+            onClick={() => window.open("https://calendly.com/beyondbusinessgroup/30min", "_blank")}
+            className="px-8 py-4 bg-black hover:bg-gray-800 text-white font-bold text-xl rounded-lg shadow-lg transition-all"
           >
-            🚀 Try Free – Get 5 AI Leads Now
+            🚀 <strong>Get AI-Scored Leads Now</strong>
           </button>
           <button
-            onClick={() => router.push("/see-how-it-works")}
-            className="px-8 py-4 bg-gray-800 hover:bg-gray-700 text-white font-bold text-xl rounded-lg shadow-lg transition-all"
+            onClick={() => window.open("https://calendly.com/beyondbusinessgroup/30min", "_blank")}
+            className="px-8 py-4 bg-gray-200 hover:bg-gray-300 text-black font-bold text-xl rounded-lg shadow-lg transition-all"
           >
-            🎥 See Bruce in Action
+            📞 <strong>Book a Call</strong>
           </button>
         </div>
       </motion.div>
 
-      {/* 🎬 AI Process Animation - Dynamic Live Demo */}
-      <AITriggerAnimation />
+      {/* 🔥 BUILT WITH EXPERTS FROM… */}
+      <div className="mt-16 text-center">
+        <h3 className="text-lg text-gray-500">Built with insights from top experts:</h3>
+        <div className="mt-6 flex flex-wrap justify-center gap-8 opacity-90">
+          <img src="/logos/adobe.png" className="h-12" alt="Adobe" />
+          <img src="/logos/google.png" className="h-12" alt="Google" />
+          <img src="/logos/linkedin.png" className="h-12" alt="LinkedIn" />
+          <img src="/logos/microsoft.png" className="h-12" alt="Microsoft" />
+          <img src="/logos/salesforce.png" className="h-12" alt="Salesforce" />
+          <img src="/logos/SAP.png" className="h-12" alt="SAP" />
+        </div>
+      </div>
 
-      {/* 📊 Why Bruce Leads Wins - Hard-Hitting Comparison Table */}
-      <ComparisonTable />
-
-      {/* 🏆 The AI Sales Sidekick (Rewritten for Simplicity & Impact) */}
-      <div className="mt-16 p-6 bg-[#1E293B] rounded-lg shadow-lg text-center max-w-5xl">
-        <h3 className="text-2xl font-semibold text-yellow-400">
-          🚀 The AI Sales Sidekick That Does the Hard Work For You
-        </h3>
-        <p className="text-gray-300 mt-2 text-lg max-w-3xl mx-auto">
-          ❌ Stop wasting time on bad leads. ✅ Bruce Leads scans <span className="text-yellow-400 font-bold">hiring trends, funding, & growth signals</span> to surface high-intent prospects automatically.
+      {/* 🔥 AI SMART TRIGGERS – HOW BRUCE WORKS */}
+      <div className="mt-24 max-w-6xl text-center">
+        <h2 className="text-4xl font-bold text-gray-900"><strong>Leads That Matter. Delivered Daily.</strong></h2>
+        <p className="text-lg text-gray-600 mt-3">
+          <strong>Bruce scans 50+ data sources</strong> to surface <strong>companies ready to hire & expand.</strong>  
+          Engage with <strong>decision-makers before competitors even know.</strong>
         </p>
 
-        {/* 🛠 Key Features - Rewritten for Clarity & Impact */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-          <div className="bg-gray-800 p-6 rounded-lg shadow-md border border-yellow-500">
-            <h4 className="text-xl font-semibold">🔍 AI-Powered Smart Triggers</h4>
-            <p className="text-gray-400 mt-2">Live tracking of funding rounds, hiring surges, and market trends to reveal hot leads first.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+          <div className="p-6 bg-white rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold text-gray-900">📡 <strong>Hiring Surges & Job Reposts</strong></h3>
+            <p className="text-gray-600 mt-2">Track <strong>job board reposts & sudden hiring spikes</strong> to spot growth companies.</p>
           </div>
-          <div className="bg-gray-800 p-6 rounded-lg shadow-md border border-blue-500">
-            <h4 className="text-xl font-semibold">⚡ 10x Faster Than Manual Research</h4>
-            <p className="text-gray-400 mt-2">AI scans 50+ sources instantly, replacing hours of prospecting with real-time insights.</p>
+          <div className="p-6 bg-white rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold text-gray-900">💰 <strong>Funding Rounds & M&A Activity</strong></h3>
+            <p className="text-gray-600 mt-2">Find companies <strong>expanding after funding or acquisitions</strong>—before your competition does.</p>
           </div>
-          <div className="bg-gray-800 p-6 rounded-lg shadow-md border border-green-500">
-            <h4 className="text-xl font-semibold">📩 AI-Crafted Personalized Outreach</h4>
-            <p className="text-gray-400 mt-2">Custom AI-generated messaging for LinkedIn, email, and sales calls. No spam. No bans.</p>
+          <div className="p-6 bg-white rounded-lg shadow-md">
+            <h3 className="text-xl font-semibold text-gray-900">📞 <strong>AI-Powered Outreach</strong></h3>
+            <p className="text-gray-600 mt-2">Generate <strong>hyper-personalized LinkedIn & email scripts</strong> with AI.</p>
           </div>
         </div>
       </div>
 
-      {/* 🎯 Call-to-Action for Early Access */}
-      <div className="mt-16 p-6 bg-[#1E293B] rounded-lg shadow-lg text-center max-w-4xl">
-        <h3 className="text-xl font-semibold text-yellow-400">
-          Join the AI Prospecting Revolution
-        </h3>
-        <p className="text-gray-400 mt-2">
-          Get early access to AI-driven lead intelligence before the public launch.
-        </p>
-        <button
-          onClick={() => router.push("/signup")}
-          className="mt-4 px-6 py-3 bg-green-500 hover:bg-green-600 text-black font-bold rounded-lg text-lg"
-        >
-          ✅ Sign Up Now
-        </button>
-      </div>
-
-      {/* 📌 Sticky CTA Bar for Continuous Conversion */}
-      <motion.div
-        className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 px-6 py-3 rounded-full shadow-lg flex gap-4 items-center cursor-pointer hover:bg-yellow-600 transition-all"
-        onClick={() => router.push("/signup")}
+      {/* 📊 REAL-TIME AI ACTIVITY */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }} 
+        animate={{ opacity: 1, scale: 1 }} 
+        transition={{ duration: 1, delay: 0.4 }} 
+        className="mt-24 bg-white p-6 rounded-lg shadow-lg text-center max-w-4xl"
       >
-        <span className="text-black font-bold">🚀 Start Finding High-Intent Leads Now</span>
+        <h3 className="text-2xl font-semibold text-gray-900">
+          Bruce is Tracking <strong>{liveLeads}</strong> Hiring & Market Signals Right Now
+        </h3>
       </motion.div>
 
-      {/* 🌎 Trusted by Recruiters, Sales Leaders, & Agencies */}
-      <footer className="mt-16 pb-8 text-gray-500">
-        <p>© 2025 Bruce Leads. All Rights Reserved.</p>
+      {/* 🆚 WHY BRUCE? STRONGER DIFFERENTIATION SECTION */}
+      <div className="mt-24 max-w-6xl text-center">
+        <h2 className="text-4xl font-bold text-gray-900"><strong>Why Top Recruiters Choose Bruce</strong></h2>
+        <p className="text-lg text-gray-600 mt-3">
+          <strong>No more manual research. No more wasted outreach.</strong>  
+          Bruce delivers <strong>warm, sales-ready conversations.</strong>
+        </p>
+      </div>
+
+      {/* 🆚 WHY BRUCE WINS – FINALIZED COMPARISON TABLE */}
+      <div className="mt-12 max-w-6xl">
+        <ComparisonTable />
+      </div>
+
+      {/* 🚀 GETTING STARTED SECTION */}
+      <div className="mt-24 text-center max-w-4xl">
+        <h3 className="text-3xl font-semibold text-gray-900"><strong>Smart Leads. Faster Deals.</strong></h3>
+        <p className="text-lg text-gray-600 mt-3">Join agencies using <strong>Bruce to unlock new business—effortlessly.</strong></p>
+        <div className="mt-6 flex gap-4 justify-center">
+          <button className="px-8 py-4 bg-black text-white font-bold text-xl rounded-lg shadow-lg">🚀 <strong>Start Now</strong></button>
+          <button className="px-8 py-4 bg-gray-200 text-black font-bold text-xl rounded-lg shadow-lg">📞 <strong>Book a Call</strong></button>
+        </div>
+      </div>
+
+      {/* 🌎 FINAL ENTERPRISE-GRADE FOOTER */}
+      <footer className="mt-24 bg-gray-900 text-white text-center p-8 w-full">
+        <p className="text-lg"><strong>Bruce Leads</strong> – The AI Growth Engine for Recruiters.</p>
+        <p className="text-sm mt-2 opacity-75">© 2025 Bruce Leads. All Rights Reserved.</p>
       </footer>
+
     </div>
   );
 }
