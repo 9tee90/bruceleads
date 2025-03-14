@@ -1,57 +1,43 @@
-import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { validateRequest, successResponse, errorResponse } from '@/lib/api';
+import { NextResponse } from 'next/server';
 
-const mockSettings = {
+const MOCK_SETTINGS = {
   notifications: {
-    emailAlerts: true,
-    leadNotifications: true,
-    weeklyDigest: false,
-    triggerAlerts: true
+    email: true,
+    push: false,
+    slack: true,
   },
   preferences: {
-    minCompanySize: '51-200',
-    targetIndustries: ['Software', 'Data Analytics', 'Cloud Computing'],
-    minLeadScore: 75,
-    autoEnrichment: true
-  }
+    theme: 'light',
+    language: 'en',
+    timezone: 'UTC',
+  },
 };
 
-export async function GET(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    const user = validateRequest(session);
+export async function GET() {
+  const session = await getServerSession(authOptions);
 
-    // Return mock data for demo users
-    if (session?.user?.email === 'demo@bruceleads.com') {
-      return successResponse(mockSettings);
-    }
-
-    // For real users, we would fetch from the database
-    // This is just a placeholder for now
-    return successResponse(mockSettings);
-  } catch (error) {
-    return errorResponse(error as Error);
+  if (!session) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 },
+    );
   }
+
+  return NextResponse.json(MOCK_SETTINGS);
 }
 
-export async function PUT(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    const user = validateRequest(session);
-    
-    const body = await req.json();
+export async function PUT() {
+  const session = await getServerSession(authOptions);
 
-    // For demo users, just return success
-    if (session?.user?.email === 'demo@bruceleads.com') {
-      return successResponse({ ...mockSettings, ...body });
-    }
-
-    // For real users, we would update the database
-    // This is just a placeholder for now
-    return successResponse({ ...mockSettings, ...body });
-  } catch (error) {
-    return errorResponse(error as Error);
+  if (!session) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 },
+    );
   }
+
+  return NextResponse.json(MOCK_SETTINGS);
 }

@@ -1,18 +1,28 @@
-import { DefaultSession, NextAuthOptions } from 'next-auth';
+import { DefaultSession, NextAuthOptions, User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+import { verify } from 'jsonwebtoken';
 
 type Role = 'ADMIN' | 'USER' | 'DEMO';
 
 declare module 'next-auth' {
-  interface Session {
+  interface Session extends DefaultSession {
     user: {
       id: string;
+      email: string;
+      name: string;
       role: Role;
-    } & DefaultSession['user'];
+      image?: string;
+    };
   }
 
   interface User {
+    id: string;
+    email: string;
+    name: string;
     role: Role;
+    image?: string;
   }
 }
 
@@ -25,7 +35,7 @@ declare module 'next-auth/jwt' {
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: 'Credentials',
+      name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
@@ -35,44 +45,89 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // For test/demo users
-        if (credentials.email === 'demo@bruceleads.com' && credentials.password === 'demouser123') {
-          return {
-            id: 'demo-user',
-            name: 'Demo User',
-            email: 'demo@bruceleads.com',
-            role: 'DEMO' as Role,
-            image: null
-          };
+        // Check if it's a demo user token
+        const token = credentials.password;
+        if (token && credentials.email === 'demo@bruceleads.com') {
+          try {
+            const decoded = verify(token, process.env.NEXTAUTH_SECRET || 'your-secret-key') as {
+              id: string;
+              email: string;
+              name: string;
+              role: Role;
+            };
+
+            const user: User = {
+              id: decoded.id,
+              email: decoded.email,
+              name: decoded.name,
+              role: decoded.role,
+            };
+
+            return user;
+          } catch (error) {
+            console.error('Demo token verification error:', error);
+            return null;
+          }
         }
 
-        // Add your actual authentication logic here
-        // This is where you would typically verify against your database
-        return null;
+        // Regular user authentication
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            role: true,
+          },
+        });
+
+        if (!user || !user.password || !user.email || !user.name) {
+          return null;
+        }
+
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
       },
     }),
   ],
   pages: {
-    signIn: '/auth/login',
-    error: '/auth/error',
+    signIn: '/login',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    jwt: ({ token, user }) => {
       if (user) {
-        token.role = user.role;
+        return {
+          ...token,
+          id: user.id,
+          role: user.role,
+        };
       }
       return token;
     },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.role = token.role;
-      }
-      return session;
+    session: ({ session, token }) => {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id as string,
+          role: token.role as Role,
+        },
+      };
     },
   },
   session: {
     strategy: 'jwt',
-    maxAge: 60 * 60, // 1 hour
   },
   secret: process.env.NEXTAUTH_SECRET,
 }; 

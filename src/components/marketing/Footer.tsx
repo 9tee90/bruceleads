@@ -1,122 +1,154 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Twitter, Linkedin, Github } from 'lucide-react';
+import { signIn } from 'next-auth/react';
+import { Button } from '@/components/ui/Button';
+import { Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { useRouter } from 'next/navigation';
 
-const CALENDLY_LINK = process.env.NEXT_PUBLIC_CALENDLY_LINK || 'https://calendly.com/beyondbusinessgroup/30min';
+const CALENDLY_LINK = 'https://calendly.com/beyondbusinessgroup/30min';
 
 const footerLinks = {
   product: [
-    { label: 'Features', href: '#features' },
-    { label: 'How it Works', href: '#how-it-works' },
+    { label: 'How It Works', href: '#how-it-works' },
     { label: 'ROI Calculator', href: '#roi' },
+    { label: 'Compare', href: '#comparison' },
     { label: 'Book Demo', href: CALENDLY_LINK, isExternal: true },
   ],
-  company: [
-    { label: 'About', href: '/about' },
-    { label: 'Contact', href: '/contact' },
-    { label: 'Blog', href: '/blog' },
-    { label: 'Careers', href: '/careers' },
-  ],
   legal: [
-    { label: 'Privacy Policy', href: '/privacy-policy' },
-    { label: 'Terms of Service', href: '/terms' },
-  ],
-  social: [
-    { label: 'Twitter', href: 'https://twitter.com/bruce_leads', icon: Twitter },
-    { label: 'LinkedIn', href: 'https://linkedin.com/company/bruce-leads', icon: Linkedin },
-    { label: 'GitHub', href: 'https://github.com/bruce-leads', icon: Github },
+    { label: 'Privacy Policy', href: '/legal/privacy' },
+    { label: 'Terms of Service', href: '/legal/terms' },
   ],
 };
 
 export default function Footer() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleDemoLogin = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to login');
+      }
+
+      const result = await signIn('credentials', {
+        email: data.email,
+        password: data.token,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      toast({
+        title: 'Welcome to Bruce!',
+        description: 'You are now logged in as a demo user.',
+      });
+
+      router.push('/dashboard');
+      router.refresh();
+    } catch (error) {
+      console.error('Demo login error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to login',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <footer className="bg-gray-900" aria-labelledby="footer-heading">
-      <h2 id="footer-heading" className="sr-only">
-        Footer
-      </h2>
-      <div className="mx-auto max-w-7xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-8">
-            <Link href="/" className="text-2xl font-bold text-white">
-              Bruce Leads
-            </Link>
-            <p className="text-sm leading-6 text-gray-300">
-              AI-powered lead generation for modern sales teams.
+    <footer className="bg-gray-900 py-12" role="contentinfo" aria-label="Site footer">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 className="text-white font-semibold mb-4">Bruce Leads</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              AI-powered lead generation platform for modern sales teams.
             </p>
-            <div className="flex space-x-6">
-              {footerLinks.social.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className="text-gray-400 hover:text-gray-300"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span className="sr-only">{item.label}</span>
-                    <Icon className="h-6 w-6" aria-hidden="true" />
-                  </Link>
-                );
-              })}
-            </div>
+            <Button
+              onClick={handleDemoLogin}
+              variant="outline"
+              disabled={isLoading}
+              className="bg-transparent text-white border-white hover:bg-white hover:text-gray-900 disabled:opacity-50 focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900"
+              aria-label={isLoading ? "Loading demo account..." : "Try demo account"}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span>Loading...</span>
+                </>
+              ) : (
+                'Try Demo'
+              )}
+            </Button>
           </div>
-          <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-            <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <h3 className="text-sm font-semibold leading-6 text-white">Product</h3>
-                <ul role="list" className="mt-6 space-y-4">
-                  {footerLinks.product.map((link) => (
-                    <li key={link.label}>
+          <div className="grid grid-cols-2 gap-8">
+            <nav aria-label="Product navigation">
+              <h3 className="text-white font-semibold mb-4" id="product-navigation">Product</h3>
+              <ul className="space-y-3" aria-labelledby="product-navigation">
+                {footerLinks.product.map((link) => (
+                  <li key={link.label}>
+                    {link.isExternal ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded-sm"
+                        aria-label={`${link.label} (opens in new tab)`}
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
                       <Link
                         href={link.href}
-                        className="text-sm leading-6 text-gray-300 hover:text-white"
-                        {...(link.isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                        className="text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded-sm"
+                        aria-label={link.label}
                       >
                         {link.label}
                       </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-10 md:mt-0">
-                <h3 className="text-sm font-semibold leading-6 text-white">Company</h3>
-                <ul role="list" className="mt-6 space-y-4">
-                  {footerLinks.company.map((link) => (
-                    <li key={link.label}>
-                      <Link
-                        href={link.href}
-                        className="text-sm leading-6 text-gray-300 hover:text-white"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold leading-6 text-white">Legal</h3>
-              <ul role="list" className="mt-6 space-y-4">
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <nav aria-label="Legal navigation">
+              <h3 className="text-white font-semibold mb-4" id="legal-navigation">Legal</h3>
+              <ul className="space-y-3" aria-labelledby="legal-navigation">
                 {footerLinks.legal.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm leading-6 text-gray-300 hover:text-white"
+                      className="text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded-sm"
+                      aria-label={link.label}
                     >
                       {link.label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
           </div>
         </div>
-        <div className="mt-16 border-t border-white/10 pt-8 sm:mt-20 lg:mt-24">
-          <p className="text-xs leading-5 text-gray-400">
-            &copy; {new Date().getFullYear()} Bruce Leads. All rights reserved.
+        <div className="mt-8 pt-8 border-t border-gray-800">
+          <p className="text-gray-400 text-sm text-center">
+            © {new Date().getFullYear()} Bruce Leads. All rights reserved.
           </p>
         </div>
       </div>

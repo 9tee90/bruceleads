@@ -1,27 +1,24 @@
 import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import { validateRequest, successResponse, errorResponse, ApiError } from '@/lib/api';
-import { Redis } from 'ioredis';
+import { validateRequest } from '@/lib/api';
+import { prisma } from '@/lib/prisma';
 
-const redis = new Redis(process.env.REDIS_URL!);
-const QUEUE_KEY = 'lead:enrichment:queue';
-const BATCH_SIZE = 10;
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
 
-    const body = await req.json();
-    const { leadIds } = body;
+    const { leadIds } = await request.json();
 
-    if (!leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
-      throw new ApiError(400, 'Lead IDs are required');
+    if (!Array.isArray(leadIds) || leadIds.length === 0) {
+      return NextResponse.json(
+        { error: 'Lead IDs array is required' },
+        { status: 400 },
+      );
     }
 
-    // Verify leads belong to user
+    // Get leads that need enrichment
     const leads = await prisma.lead.findMany({
       where: {
         id: {
@@ -29,160 +26,88 @@ export async function POST(req: NextRequest) {
         },
         userId: user.id,
       },
-      select: {
-        id: true,
-        company: true,
-        companyData: {
-          select: {
-            lastEnriched: true,
-          },
-        },
+      include: {
+        companyData: true,
       },
     });
 
-    if (leads.length !== leadIds.length) {
-      throw new ApiError(400, 'Some leads were not found or don\'t belong to you');
+    if (!leads.length) {
+      return NextResponse.json(
+        { error: 'No leads found' },
+        { status: 404 },
+      );
     }
 
-    // Filter out recently enriched leads (within last 24 hours)
-    const now = new Date();
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    // Queue enrichment tasks
+    const enrichmentTasks = leads.map(async (lead) => {
+      if (lead.companyData) {
+        return NextResponse.json(
+          { error: `Lead ${lead.id} already has company data` },
+          { status: 400 },
+        );
+      }
 
-    const leadsToEnrich = leads.filter(
-      (lead) =>
-        !lead.companyData?.lastEnriched || lead.companyData.lastEnriched < twentyFourHoursAgo,
-    );
+      // Mock enrichment process
+      const enrichedData = {
+        name: lead.company || 'Unknown Company',
+        industry: 'Technology',
+        size: '1-50',
+        location: 'United States',
+        website: `https://www.${(lead.company || 'unknown').toLowerCase().replace(/\s+/g, '')}.com`,
+      };
 
-    if (leadsToEnrich.length === 0) {
-      return successResponse({
-        message: 'All leads were enriched recently',
-        queued: 0,
-        skipped: leads.length,
+      await prisma.company.create({
+        data: {
+          ...enrichedData,
+          leadId: lead.id,
+        },
       });
-    }
 
-    // Add leads to enrichment queue
-    const queueItems = leadsToEnrich.map((lead) => ({
-      leadId: lead.id,
-      company: lead.company,
-      userId: user.id,
-      priority: 1,
-      attempts: 0,
-      addedAt: now.toISOString(),
-    }));
-
-    // Use Redis transaction to add items to queue
-    const multi = redis.multi();
-    for (const item of queueItems) {
-      multi.rpush(QUEUE_KEY, JSON.stringify(item));
-    }
-    await multi.exec();
-
-    // Start processing if queue was empty
-    const queueLength = await redis.llen(QUEUE_KEY);
-    if (queueLength === queueItems.length) {
-      // Queue was empty, trigger processing
-      processQueue().catch(console.error);
-    }
-
-    return successResponse({
-      message: 'Leads added to enrichment queue',
-      queued: queueItems.length,
-      skipped: leads.length - queueItems.length,
+      return lead.id;
     });
+
+    const results = await Promise.allSettled(enrichmentTasks);
+    const successful = results
+      .filter((result): result is PromiseFulfilledResult<string> => result.status === 'fulfilled')
+      .map((result) => result.value);
+
+    return NextResponse.json(
+      {
+        message: 'Enrichment tasks queued successfully',
+        enriched: successful,
+      },
+      { status: 200 },
+    );
   } catch (error) {
-    return errorResponse(error as Error);
+    console.error('Error enriching leads:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
 
-    // Get queue status
-    const queueLength = await redis.llen(QUEUE_KEY);
-    const queueItems = await redis.lrange(QUEUE_KEY, 0, -1);
+    // Get leads pending enrichment
+    const pendingLeads = await prisma.lead.findMany({
+      where: {
+        userId: user.id,
+        companyData: null
+      },
+      select: {
+        id: true,
+        name: true,
+        company: true
+      }
+    });
 
-    // Filter items for this user
-    const userItems = queueItems
-      .map((item) => JSON.parse(item))
-      .filter((item) => item.userId === user.id);
-
-    return successResponse({
-      totalItems: queueLength,
-      userItems: userItems.length,
-      items: userItems,
+    return NextResponse.json({
+      pendingCount: pendingLeads.length,
+      leads: pendingLeads
     });
   } catch (error) {
-    return errorResponse(error as Error);
-  }
-}
-
-async function processQueue() {
-  while (true) {
-    // Get batch of items from queue
-    const items = await redis.lrange(QUEUE_KEY, 0, BATCH_SIZE - 1);
-    if (items.length === 0) {
-      break; // Queue is empty
-    }
-
-    // Process items in parallel
-    await Promise.all(
-      items.map(async (item) => {
-        const { leadId, company, userId } = JSON.parse(item);
-
-        try {
-          // TODO: Implement actual enrichment logic using external APIs
-          const enrichedData = {
-            name: company,
-            website: `https://${company.toLowerCase().replace(/\s+/g, '')}.com`,
-            industry: 'Technology',
-            size: '50-200',
-            location: 'San Francisco, CA',
-            funding: {
-              round: 'Series A',
-              amount: '5000000',
-              date: new Date().toISOString(),
-            },
-            lastFundingDate: new Date().toISOString(),
-            hiringSignals: {
-              jobPostings: Math.floor(Math.random() * 20),
-              lastUpdated: new Date().toISOString(),
-            },
-            lastEnriched: new Date(),
-          };
-
-          // Update company data
-          await prisma.company.upsert({
-            where: { leadId },
-            create: {
-              ...enrichedData,
-              leadId,
-            },
-            update: enrichedData,
-          });
-
-          // Create activity record
-          await prisma.activity.create({
-            data: {
-              type: 'NOTE',
-              leadId,
-              userId,
-              content: 'Company data enriched automatically',
-              metadata: {
-                enrichment: enrichedData,
-              },
-            },
-          });
-
-          // Remove item from queue
-          await redis.lrem(QUEUE_KEY, 1, item);
-        } catch (error) {
-          console.error(`Error enriching lead ${leadId}:`, error);
-          // Could implement retry logic here
-        }
-      }),
-    );
+    console.error('Error getting enrichment status:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

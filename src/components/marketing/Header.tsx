@@ -6,13 +6,15 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 const navItems = [
-  { href: '#features', label: 'Features' },
   { href: '#how-it-works', label: 'How it Works' },
   { href: '#roi', label: 'ROI Calculator' },
   { href: '#comparison', label: 'Compare' },
 ];
+
+const CALENDLY_LINK = 'https://calendly.com/beyondbusinessgroup/30min';
 
 export default function Header() {
   const { scrollYProgress } = useScroll();
@@ -39,13 +41,8 @@ export default function Header() {
   const headerBg = useTransform(
     scrollYProgress,
     [0, 0.1],
-    ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.9)'],
+    ['rgba(17, 24, 39, 0)', 'rgba(17, 24, 39, 0.8)'],
   );
-
-  const handleDemoLogin = useCallback(() => {
-    localStorage.setItem('demo_user', 'true');
-    window.location.href = '/dashboard';
-  }, []);
 
   const toggleMenu = useCallback(() => {
     setIsMenuOpen((prev) => !prev);
@@ -58,16 +55,12 @@ export default function Header() {
   return (
     <motion.header
       style={{ backgroundColor: headerBg }}
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b border-transparent"
+      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b border-gray-800/20"
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           <div className="flex-shrink-0">
-            <Link
-              href="/"
-              className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
-              aria-label="Bruce - Home"
-            >
+            <Link href="/" className="text-2xl font-bold text-white hover:text-gray-200 transition-colors">
               Bruce
             </Link>
           </div>
@@ -78,19 +71,15 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-gray-600 hover:text-gray-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-md px-2 py-1"
+                className="text-gray-300 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-md px-2 py-1"
               >
                 {item.label}
               </Link>
             ))}
-            <button
-              onClick={handleDemoLogin}
-              className="text-gray-600 hover:text-gray-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-md px-2 py-1"
-            >
-              Demo Login
-            </button>
-            <Button size="sm" className="shadow-sm hover:shadow-md transition-shadow">
-              <Link href="#book-demo">Book a Demo</Link>
+            <Button asChild size="sm" className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300">
+              <Link href={CALENDLY_LINK} target="_blank" rel="noopener noreferrer">
+                Book a Demo
+              </Link>
             </Button>
           </div>
 
@@ -98,7 +87,7 @@ export default function Header() {
           <div className="md:hidden">
             <button
               onClick={toggleMenu}
-              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="p-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               aria-expanded={isMenuOpen}
               aria-label="Toggle menu"
             >
@@ -120,28 +109,27 @@ export default function Header() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-x-0 top-16 bg-white border-b border-gray-200 shadow-lg"
+              className="md:hidden fixed inset-x-0 top-16 bg-gray-900 border-b border-gray-800"
             >
               <div className="max-w-7xl mx-auto px-4 py-2 space-y-1">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="block w-full text-left px-4 py-3 text-base font-medium text-gray-900 hover:bg-gray-100 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
+                    className="block w-full text-left px-4 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500"
                     onClick={closeMenu}
                   >
                     {item.label}
                   </Link>
                 ))}
-                <button
-                  onClick={handleDemoLogin}
-                  className="block w-full text-left px-4 py-3 text-base font-medium text-gray-900 hover:bg-gray-100 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
-                >
-                  Demo Login
-                </button>
                 <div className="px-4 py-2">
-                  <Button className="w-full justify-center shadow-sm hover:shadow-md transition-shadow">
-                    <Link href="#book-demo" onClick={closeMenu}>
+                  <Button asChild className="w-full justify-center bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300">
+                    <Link
+                      href={CALENDLY_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={closeMenu}
+                    >
                       Book a Demo
                     </Link>
                   </Button>

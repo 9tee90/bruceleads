@@ -1,65 +1,41 @@
 import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import { validateRequest, successResponse, errorResponse, ApiError } from '@/lib/api';
+import { validateRequest } from '@/lib/api';
+import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
-
-    const lead = await prisma.lead.findFirst({
-      where: {
-        id: params.id,
-        userId: user.id,
-      },
-    });
-
-    if (!lead) {
-      throw new ApiError(404, 'Lead not found');
-    }
 
     const activities = await prisma.activity.findMany({
       where: {
         leadId: params.id,
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-          },
-        },
+        userId: user.id
       },
       orderBy: {
-        createdAt: 'desc',
-      },
+        createdAt: 'desc'
+      }
     });
 
-    return successResponse(activities);
+    return NextResponse.json(activities);
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
-
-    const lead = await prisma.lead.findFirst({
-      where: {
-        id: params.id,
-        userId: user.id,
-      },
-    });
-
-    if (!lead) {
-      throw new ApiError(404, 'Lead not found');
-    }
-
-    const body = await req.json();
+    
+    const body = await request.json();
     const { type, content, metadata } = body;
+
+    if (!type || !content) {
+      return NextResponse.json({ error: 'Type and content are required' }, { status: 400 });
+    }
 
     const activity = await prisma.activity.create({
       data: {
@@ -67,31 +43,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         content,
         metadata,
         leadId: params.id,
-        userId: user.id,
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-          },
-        },
-      },
+        userId: user.id
+      }
     });
 
-    // Update lead's last contacted date if activity type is not a note
-    if (type !== 'NOTE') {
-      await prisma.lead.update({
-        where: {
-          id: params.id,
-        },
-        data: {
-          lastContactedAt: new Date(),
-        },
-      });
-    }
-
-    return successResponse(activity, 201);
+    return NextResponse.json(activity);
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

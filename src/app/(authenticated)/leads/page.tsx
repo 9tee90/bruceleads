@@ -1,13 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Filter, Search, Download } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 
+export const dynamic = 'force-dynamic';
+
 export default function LeadsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LeadsContent />
+    </Suspense>
+  );
+}
+
+function LeadsContent() {
   const searchParams = useSearchParams();
   const [leads, setLeads] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +32,9 @@ export default function LeadsPage() {
     try {
       setIsLoading(true);
       const response = await fetch('/api/leads');
-      if (!response.ok) throw new Error('Failed to fetch leads');
+      if (!response.ok) {
+        throw new Error('Failed to fetch leads');
+      }
       const data = await response.json();
       setLeads(data.data.leads);
     } catch (error) {
@@ -44,7 +56,9 @@ export default function LeadsPage() {
         method: 'GET',
       });
 
-      if (!response.ok) throw new Error('Failed to export leads');
+      if (!response.ok) {
+        throw new Error('Failed to export leads');
+      }
 
       // Create a download link
       const blob = await response.blob();

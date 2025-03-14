@@ -6,66 +6,31 @@ import { successResponse, errorResponse, ApiError } from '@/lib/api';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, password } = body;
+    const { email, password } = body;
 
-    // Validate input
-    if (!email || !password || !name) {
-      throw new ApiError(400, 'Missing required fields');
+    if (!email || !password) {
+      throw new ApiError(400, 'Email and password are required');
     }
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (existingUser) {
-      throw new ApiError(400, 'User already exists');
+      throw new ApiError(400, 'Email already exists');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
-        name,
         email,
         password: hashedPassword,
-        role: 'USER',
-        settings: {
-          notifications: {
-            email: true,
-            browser: true,
-            slack: false,
-          },
-          preferences: {
-            timezone: 'UTC',
-            dateFormat: 'MM/DD/YYYY',
-            theme: 'light',
-          },
-          integrations: {
-            calendar: false,
-            crm: false,
-            email: false,
-          },
-          automation: {
-            leadScoring: true,
-            emailCampaigns: true,
-            followUps: true,
-          },
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        settings: true,
       },
     });
 
-    return successResponse(user, 201);
+    return successResponse({ user });
   } catch (error) {
     return errorResponse(error as Error);
   }
-} 
+}

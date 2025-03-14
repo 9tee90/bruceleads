@@ -1,22 +1,50 @@
 import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import { validateRequest, successResponse, errorResponse, ApiError } from '@/lib/api';
+import { validateRequest } from '@/lib/api';
+import { prisma } from '@/lib/prisma';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
+    
+    const body = await request.json();
+    const { leads } = body;
 
-    const body = await req.json();
-    const { operation, leadIds, data } = body;
-
-    if (!operation || !leadIds || !Array.isArray(leadIds) || leadIds.length === 0) {
-      throw new ApiError(400, 'Invalid request parameters');
+    if (!Array.isArray(leads) || leads.length === 0) {
+      return NextResponse.json({ error: 'Leads array is required' }, { status: 400 });
     }
 
-    // Verify all leads belong to the user
+    const createdLeads = await prisma.lead.createMany({
+      data: leads.map(lead => ({
+        ...lead,
+        userId: user.id,
+        status: 'NEW'
+      }))
+    });
+
+    return NextResponse.json({
+      message: 'Leads created successfully',
+      count: createdLeads.count
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = validateRequest(session);
+    
+    const body = await request.json();
+    const { leadIds, action, data } = body;
+
+    if (!Array.isArray(leadIds) || leadIds.length === 0) {
+      return NextResponse.json({ error: 'Lead IDs array is required' }, { status: 400 });
+    }
+
     const leads = await prisma.lead.findMany({
       where: {
         id: {
@@ -24,119 +52,63 @@ export async function POST(req: NextRequest) {
         },
         userId: user.id,
       },
+      include: {
+        companyData: true,
+        activities: true,
+      },
     });
 
-    if (leads.length !== leadIds.length) {
-      throw new ApiError(400, 'Some leads were not found or don\'t belong to you');
+    if (!leads.length) {
+      return NextResponse.json(
+        { error: 'No leads found' },
+        { status: 404 },
+      );
     }
 
-    let result;
+    // Perform bulk action
+    switch (action) {
+      case 'delete':
+        await prisma.lead.deleteMany({
+          where: {
+            id: {
+              in: leadIds,
+            },
+            userId: user.id,
+          },
+        });
+        break;
 
-    switch (operation) {
-      case 'update_status': {
-        if (!data?.status) {
-          throw new ApiError(400, 'Status is required for this operation');
+      case 'update':
+        if (!data) {
+          return NextResponse.json(
+            { error: 'Update data is required' },
+            { status: 400 },
+          );
         }
 
-        result = await prisma.lead.updateMany({
+        await prisma.lead.updateMany({
           where: {
             id: {
               in: leadIds,
             },
+            userId: user.id,
           },
-          data: {
-            status: data.status,
-          },
+          data,
         });
         break;
-      }
-
-      case 'add_tags': {
-        if (!data?.tags || !Array.isArray(data.tags)) {
-          throw new ApiError(400, 'Tags array is required for this operation');
-        }
-
-        // Get current tags for each lead
-        const leadsWithTags = await prisma.lead.findMany({
-          where: {
-            id: {
-              in: leadIds,
-            },
-          },
-          select: {
-            id: true,
-            tags: true,
-          },
-        });
-
-        // Update each lead with new tags
-        const updates = leadsWithTags.map((lead) =>
-          prisma.lead.update({
-            where: { id: lead.id },
-            data: {
-              tags: [...new Set([...lead.tags, ...data.tags])],
-            },
-          }),
-        );
-
-        await Promise.all(updates);
-        result = { count: leadsWithTags.length };
-        break;
-      }
-
-      case 'remove_tags': {
-        if (!data?.tags || !Array.isArray(data.tags)) {
-          throw new ApiError(400, 'Tags array is required for this operation');
-        }
-
-        // Get current tags for each lead
-        const leadsWithTags = await prisma.lead.findMany({
-          where: {
-            id: {
-              in: leadIds,
-            },
-          },
-          select: {
-            id: true,
-            tags: true,
-          },
-        });
-
-        // Update each lead by removing specified tags
-        const updates = leadsWithTags.map((lead) =>
-          prisma.lead.update({
-            where: { id: lead.id },
-            data: {
-              tags: lead.tags.filter((tag) => !data.tags.includes(tag)),
-            },
-          }),
-        );
-
-        await Promise.all(updates);
-        result = { count: leadsWithTags.length };
-        break;
-      }
-
-      case 'delete': {
-        result = await prisma.lead.deleteMany({
-          where: {
-            id: {
-              in: leadIds,
-            },
-          },
-        });
-        break;
-      }
 
       default:
-        throw new ApiError(400, 'Invalid operation');
+        return NextResponse.json(
+          { error: 'Invalid action' },
+          { status: 400 },
+        );
     }
 
-    return successResponse({
-      message: `Bulk operation "${operation}" completed successfully`,
-      result,
-    });
+    return NextResponse.json(
+      { message: `Bulk ${action} completed successfully` },
+      { status: 200 },
+    );
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

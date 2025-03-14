@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 export default withAuth(
   function middleware(req) {
     // Public paths that don't require authentication
-    const publicPaths = ['/', '/auth/login', '/auth/error', '/legal/privacy', '/legal/terms', '/dashboard'];
+    const publicPaths = ['/', '/auth/login', '/auth/error', '/legal/privacy', '/legal/terms'];
     const isPublicPath = publicPaths.includes(req.nextUrl.pathname);
 
     // If the user is authenticated and tries to access auth pages (except home page),
@@ -43,8 +43,7 @@ export const config = {
      * - favicon.ico (favicon file)
      * - / (home page)
      * - /legal (legal pages)
-     * - /dashboard (temporarily public for demo)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|legal|dashboard|$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|legal|$).*)',
   ],
 }; 

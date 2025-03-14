@@ -1,88 +1,57 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { validateRequest, errorResponse } from '@/lib/api';
 import { prisma } from '@/lib/prisma';
-import { stringify } from 'csv-stringify/sync';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { NextResponse } from 'next/server';
+import { validateRequest } from '@/lib/api';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
 
-    const searchParams = req.nextUrl.searchParams;
-    const status = searchParams.get('status');
-    const source = searchParams.get('source');
-    const search = searchParams.get('search');
-
-    // Build query
-    const where = {
-      userId: user.id,
-      ...(status && { status }),
-      ...(source && { source }),
-      ...(search && {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { company: { contains: search, mode: 'insensitive' } },
-          { title: { contains: search, mode: 'insensitive' } },
-        ],
-      }),
-    };
-
-    // Get leads with related data
     const leads = await prisma.lead.findMany({
-      where,
+      where: {
+        userId: user.id,
+      },
       include: {
         companyData: true,
-        activities: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
+        activities: true,
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    // Prepare CSV data
+    if (!leads.length) {
+      return NextResponse.json(
+        { error: 'No leads found' },
+        { status: 404 },
+      );
+    }
+
+    // Transform leads for CSV export
     const csvData = leads.map((lead) => ({
+      id: lead.id,
       name: lead.name,
+      email: lead.email,
       company: lead.company,
-      title: lead.title,
-      email: lead.email || '',
-      phone: lead.phone || '',
-      linkedinUrl: lead.linkedinUrl || '',
-      source: lead.source,
       status: lead.status,
       score: lead.score,
-      tags: lead.tags.join(','),
-      notes: lead.notes || '',
-      industry: lead.companyData?.industry || '',
+      createdAt: lead.createdAt,
+      companyIndustry: lead.companyData?.industry || '',
       companySize: lead.companyData?.size || '',
-      location: lead.companyData?.location || '',
-      lastContactedAt: lead.lastContactedAt?.toISOString() || '',
-      createdAt: lead.createdAt.toISOString(),
-      updatedAt: lead.updatedAt.toISOString(),
+      companyLocation: lead.companyData?.location || '',
+      lastActivity: lead.activities[0]?.createdAt || '',
     }));
 
-    // Generate CSV
-    const csv = stringify(csvData, {
-      header: true,
-      columns: Object.keys(csvData[0] || {}),
-    });
-
-    // Set response headers
-    const headers = new Headers();
-    headers.set('Content-Type', 'text/csv');
-    headers.set(
-      'Content-Disposition',
-      `attachment; filename="leads-${new Date().toISOString().split('T')[0]}.csv"`,
+    return NextResponse.json(
+      { data: csvData },
+      { status: 200 },
     );
-
-    return new Response(csv, {
-      headers,
-    });
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json(
+      { error: 'Failed to export leads' },
+      { status: 500 },
+    );
   }
 }

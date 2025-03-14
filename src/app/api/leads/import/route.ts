@@ -1,76 +1,50 @@
 import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import { validateRequest, successResponse, errorResponse, ApiError } from '@/lib/api';
-import { parse } from 'csv-parse/sync';
+import { validateRequest } from '@/lib/api';
+import { prisma } from '@/lib/prisma';
+import { LeadStatus } from '@prisma/client';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
+    
+    const body = await request.json();
+    const { leads } = body;
 
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
-
-    if (!file) {
-      throw new ApiError(400, 'No file provided');
+    if (!Array.isArray(leads) || leads.length === 0) {
+      return NextResponse.json({ error: 'Leads array is required' }, { status: 400 });
     }
 
-    // Read file content
-    const content = await file.text();
+    // Validate lead data
+    const validLeads = leads.map(lead => ({
+      name: lead.name,
+      email: lead.email,
+      company: lead.company,
+      title: lead.title,
+      status: LeadStatus.NEW,
+      score: 0,
+      userId: user.id
+    })).filter(lead => lead.name && typeof lead.name === 'string');
 
-    // Parse CSV
-    const records = parse(content, {
-      columns: true,
-      skip_empty_lines: true,
+    if (validLeads.length === 0) {
+      return NextResponse.json({ error: 'No valid leads found in import data' }, { status: 400 });
+    }
+
+    // Import leads
+    const importedLeads = await prisma.lead.createMany({
+      data: validLeads,
+      skipDuplicates: true
     });
 
-    // Validate required fields
-    const requiredFields = ['name', 'company', 'title'];
-    const missingFields = requiredFields.filter(
-      (field) => !Object.keys(records[0] || {}).includes(field),
-    );
-
-    if (missingFields.length > 0) {
-      throw new ApiError(400, `Missing required fields: ${missingFields.join(', ')}`);
-    }
-
-    // Process records
-    const results = {
-      total: records.length,
-      successful: 0,
-      failed: 0,
-      errors: [] as string[],
-    };
-
-    for (const record of records) {
-      try {
-        // Create lead
-        await prisma.lead.create({
-          data: {
-            name: record.name,
-            company: record.company,
-            title: record.title,
-            email: record.email,
-            phone: record.phone,
-            linkedinUrl: record.linkedinUrl,
-            source: 'MANUAL',
-            tags: record.tags ? record.tags.split(',').map((tag: string) => tag.trim()) : [],
-            notes: record.notes,
-            userId: user.id,
-          },
-        });
-
-        results.successful++;
-      } catch (error) {
-        results.failed++;
-        results.errors.push(`Failed to import lead "${record.name}": ${error.message}`);
-      }
-    }
-
-    return successResponse(results);
+    return NextResponse.json({
+      message: 'Leads imported successfully',
+      imported: importedLeads.count,
+      total: leads.length
+    });
   } catch (error) {
-    return errorResponse(error as Error);
+    console.error('Error importing leads:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

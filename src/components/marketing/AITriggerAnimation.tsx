@@ -35,7 +35,7 @@ const generateSignals = (count: number): Signal[] => {
   }));
 };
 
-export default function AITriggerAnimation() {
+export function AITriggerAnimation() {
   const [signals] = useState(() => generateSignals(8));
   const [activeSignal, setActiveSignal] = useState<number | null>(null);
   const [phase, setPhase] = useState(0);

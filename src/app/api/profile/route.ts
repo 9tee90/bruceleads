@@ -1,32 +1,41 @@
 import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { validateRequest, successResponse, errorResponse, ApiError } from '@/lib/api';
 import bcrypt from 'bcryptjs';
 
-export async function GET(_req: Request) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    const user = validateRequest(session);
 
-    const profile = await prisma.user.findUnique({
-      where: { id: user.id },
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: session.user.id,
+      },
       select: {
         id: true,
         name: true,
         email: true,
-        company: true,
         role: true,
         subscription: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
 
-    return successResponse(profile);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(user);
   } catch (error) {
-    return errorResponse('Failed to fetch profile', 500);
+    return NextResponse.json(
+      { error: 'Failed to fetch profile' },
+      { status: 500 }
+    );
   }
 }
 
@@ -36,7 +45,7 @@ export async function PATCH(req: NextRequest) {
     const user = validateRequest(session);
 
     const body = await req.json();
-    const { name, company, currentPassword, newPassword } = body;
+    const { name, currentPassword, newPassword } = body;
 
     // Validate input
     if (!name) {
@@ -76,7 +85,6 @@ export async function PATCH(req: NextRequest) {
         where: { id: user.id },
         data: {
           name,
-          company,
           password: hashedPassword,
         },
       });
@@ -86,7 +94,6 @@ export async function PATCH(req: NextRequest) {
         where: { id: user.id },
         data: {
           name,
-          company,
         },
       });
     }
@@ -98,11 +105,8 @@ export async function PATCH(req: NextRequest) {
         id: true,
         name: true,
         email: true,
-        company: true,
         role: true,
         subscription: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
 

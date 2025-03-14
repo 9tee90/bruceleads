@@ -1,61 +1,71 @@
 import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import { successResponse, errorResponse } from '@/lib/api';
+import { validateRequest } from '@/lib/api';
 import { prisma } from '@/lib/prisma';
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const _user = session?.user;
+    const user = validateRequest(session);
+    
+    const { name, leadId } = await request.json();
 
-    const body = await req.json();
-    const { companyName, website } = body;
-
-    if (!companyName) {
-      throw new ApiError(400, 'Company name is required');
+    if (!name || !leadId) {
+      return NextResponse.json(
+        { error: 'Company name and lead ID are required' },
+        { status: 400 },
+      );
     }
 
     // Check if company data already exists
     const existingCompany = await prisma.company.findFirst({
       where: {
         name: {
-          contains: companyName,
+          equals: name,
           mode: 'insensitive',
+        },
+        lead: {
+          userId: user.id,
         },
       },
     });
 
     if (existingCompany) {
-      return successResponse(existingCompany);
+      return NextResponse.json(
+        { error: 'Company data already exists' },
+        { status: 400 },
+      );
     }
 
-    // TODO: Implement company data enrichment using external APIs
-    // For now, return mock data
+    // Enrich company data
     const enrichedData = {
-      name: companyName,
-      website: website || `https://${companyName.toLowerCase().replace(/\s+/g, '')}.com`,
+      name,
+      lead: {
+        connect: {
+          id: leadId,
+        },
+      },
       industry: 'Technology',
-      size: '50-200',
-      location: 'San Francisco, CA',
-      funding: {
-        round: 'Series A',
-        amount: '5000000',
-        date: new Date().toISOString(),
-      },
-      lastFundingDate: new Date().toISOString(),
-      hiringSignals: {
-        jobPostings: Math.floor(Math.random() * 20),
-        lastUpdated: new Date().toISOString(),
-      },
+      size: '1-50',
+      location: 'United States',
+      website: `https://www.${name.toLowerCase().replace(/\s+/g, '')}.com`,
     };
 
     // Create company record
     const company = await prisma.company.create({
       data: enrichedData,
+      include: {
+        lead: true,
+      },
     });
 
-    return successResponse(company, 201);
+    return NextResponse.json(
+      { company },
+      { status: 201 },
+    );
   } catch (error) {
-    return errorResponse('Failed to enrich company data', 500);
+    console.error('Error enriching company:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,39 +1,44 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { sign } from 'jsonwebtoken';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+
+const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key';
 
 export async function POST() {
   try {
-    // Check if there's already a session
-    const session = await getServerSession(authOptions);
-    if (session) {
-      return NextResponse.json({ error: 'Already authenticated' }, { status: 400 });
-    }
-
-    // Create a demo user session
+    // Create a demo user token without requiring database access
     const demoUser = {
-      id: 'demo-user',
+      id: 'demo-user-id',
+      email: 'demo@bruceleads.com',
       name: 'Demo User',
-      email: 'demo@bruceleads.ai',
-      role: 'demo',
-      createdAt: new Date().toISOString(),
+      role: 'DEMO',
     };
 
-    // Set the session cookie
-    const response = NextResponse.json({ success: true });
-    response.cookies.set({
-      name: 'next-auth.session-token',
-      value: JSON.stringify(demoUser),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60, // 1 hour
-      path: '/',
-    });
+    // Create a demo user session token
+    const token = sign(
+      {
+        id: demoUser.id,
+        email: demoUser.email,
+        name: demoUser.name,
+        role: demoUser.role,
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-    return response;
+    return NextResponse.json({
+      success: true,
+      token,
+      email: demoUser.email,
+    });
   } catch (error) {
     console.error('Demo login error:', error);
-    return NextResponse.json({ error: 'Failed to create demo session' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create demo session' },
+      { status: 500 }
+    );
   }
 }

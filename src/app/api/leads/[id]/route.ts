@@ -1,10 +1,10 @@
 import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import { validateRequest, successResponse, errorResponse, ApiError } from '@/lib/api';
+import { validateRequest } from '@/lib/api';
+import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
@@ -12,79 +12,68 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const lead = await prisma.lead.findFirst({
       where: {
         id: params.id,
-        userId: user.id,
+        userId: user.id
       },
       include: {
         companyData: true,
         activities: {
-          orderBy: { createdAt: 'desc' },
-          include: {
-            user: {
-              select: {
-                name: true,
-              },
-            },
+          orderBy: {
+            createdAt: 'desc'
           },
-        },
-      },
+          take: 5
+        }
+      }
     });
 
     if (!lead) {
-      throw new ApiError(404, 'Lead not found');
+      return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
 
-    return successResponse(lead);
+    return NextResponse.json(lead);
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
-
-    const body = await req.json();
-    const { name, company, title, email, phone, linkedinUrl, status, tags, notes } = body;
+    
+    const body = await request.json();
+    const { name, email, company, title, status } = body;
 
     const lead = await prisma.lead.findFirst({
       where: {
         id: params.id,
-        userId: user.id,
-      },
+        userId: user.id
+      }
     });
 
     if (!lead) {
-      throw new ApiError(404, 'Lead not found');
+      return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
 
     const updatedLead = await prisma.lead.update({
       where: {
-        id: params.id,
+        id: params.id
       },
       data: {
-        name,
-        company,
-        title,
-        email,
-        phone,
-        linkedinUrl,
-        status,
-        tags,
-        notes,
-      },
-      include: {
-        companyData: true,
-      },
+        name: name || lead.name,
+        email: email || lead.email,
+        company: company || lead.company,
+        title: title || lead.title,
+        status: status || lead.status
+      }
     });
 
-    return successResponse(updatedLead);
+    return NextResponse.json(updatedLead);
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
@@ -92,22 +81,22 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const lead = await prisma.lead.findFirst({
       where: {
         id: params.id,
-        userId: user.id,
-      },
+        userId: user.id
+      }
     });
 
     if (!lead) {
-      throw new ApiError(404, 'Lead not found');
+      return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
 
     await prisma.lead.delete({
       where: {
-        id: params.id,
-      },
+        id: params.id
+      }
     });
 
-    return successResponse({ message: 'Lead deleted successfully' });
+    return NextResponse.json({ message: 'Lead deleted successfully' });
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -5,7 +5,7 @@ import Stripe from 'stripe';
 import { successResponse, errorResponse } from '@/lib/api';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
+  apiVersion: '2023-10-16',
 });
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -24,8 +24,9 @@ export async function POST(req: NextRequest) {
 
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err) {
-      throw new Error(`Webhook signature verification failed: ${err.message}`);
+    } catch (err: any) {
+      const message = err instanceof Error ? err.message : 'Webhook signature verification failed';
+      throw new Error(`Webhook signature verification failed: ${message}`);
     }
 
     switch (event.type) {

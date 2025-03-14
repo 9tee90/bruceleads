@@ -66,7 +66,9 @@ export default function TriggerFeed() {
   const fetchEvents = async () => {
     try {
       const response = await fetch('/api/triggers');
-      if (!response.ok) throw new Error('Failed to fetch triggers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch triggers');
+      }
       const data = await response.json();
       setEvents(data.data);
     } catch (error) {

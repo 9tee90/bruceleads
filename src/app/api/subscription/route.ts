@@ -1,112 +1,152 @@
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
-import { validateRequest, successResponse, errorResponse, ApiError } from '@/lib/api';
+import { Prisma } from '@prisma/client';
 import Stripe from 'stripe';
 
+interface Subscription {
+  plan: 'free' | 'pro' | 'enterprise';
+  status: 'active' | 'inactive' | 'trial';
+  expiresAt: Date;
+  stripeSubscriptionId?: string;
+}
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
+  apiVersion: '2023-10-16',
 });
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    const user = validateRequest(session);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const subscription = await prisma.user.findUnique({
-      where: { id: user.id },
+      where: { id: session.user.id },
       select: { subscription: true },
     });
 
-    return successResponse(subscription?.subscription);
+    return NextResponse.json(subscription?.subscription);
   } catch (error) {
-    return errorResponse('Failed to fetch subscription', 500);
+    return NextResponse.json(
+      { error: 'Failed to fetch subscription' },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(_req: Request) {
+export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    const user = validateRequest(session);
-    const body = await _req.json();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await req.json();
     const { priceId } = body;
 
-    // Create or retrieve Stripe customer
+    if (!priceId) {
+      return NextResponse.json(
+        { error: 'Price ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true, stripeCustomerId: true },
+    });
+
+    if (!user?.email) {
+      return NextResponse.json(
+        { error: 'User email not found' },
+        { status: 400 }
+      );
+    }
+
     let customerId = user.stripeCustomerId;
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email,
-        name: user.name,
         metadata: {
-          userId: user.id,
+          userId: session.user.id,
         },
       });
       customerId = customer.id;
 
-      // Update user with Stripe customer ID
       await prisma.user.update({
-        where: { id: user.id },
+        where: { id: session.user.id },
         data: { stripeCustomerId: customerId },
       });
     }
 
-    // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
+      mode: 'subscription',
+      payment_method_types: ['card'],
       line_items: [
         {
           price: priceId,
           quantity: 1,
         },
       ],
-      mode: 'subscription',
-      success_url: `${process.env.NEXTAUTH_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/pricing?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?canceled=true`,
       metadata: {
-        userId: user.id,
+        userId: session.user.id,
       },
     });
 
-    return successResponse({ url: checkoutSession.url });
+    return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
-    return errorResponse('Failed to update subscription', 500);
+    return NextResponse.json(
+      { error: 'Failed to create checkout session' },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(_req: NextRequest) {
+export async function DELETE(req: Request) {
   try {
-    const authSession = await getServerSession(authOptions);
-    const user = validateRequest(authSession);
+    const session = await getServerSession(authOptions);
 
-    if (!user.stripeCustomerId) {
-      throw new ApiError(400, 'No active subscription found');
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Cancel subscription in Stripe
-    const subscriptions = await stripe.subscriptions.list({
-      customer: user.stripeCustomerId,
-      status: 'active',
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { stripeCustomerId: true, subscription: true },
     });
 
-    if (subscriptions.data.length > 0) {
-      await stripe.subscriptions.cancel(subscriptions.data[0].id);
+    const subscription = user?.subscription as Subscription | null;
+
+    if (!user?.stripeCustomerId || !subscription?.stripeSubscriptionId) {
+      return NextResponse.json(
+        { error: 'No active subscription found' },
+        { status: 400 }
+      );
     }
 
-    // Update user subscription status
+    await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: session.user.id },
       data: {
-        subscription: {
-          plan: 'free',
-          status: 'inactive',
-          expiresAt: new Date(),
-        },
+        subscription: undefined,
       },
     });
 
-    return successResponse({ message: 'Subscription cancelled successfully' });
+    return NextResponse.json({ message: 'Subscription canceled successfully' });
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json(
+      { error: 'Failed to cancel subscription' },
+      { status: 500 }
+    );
   }
 }

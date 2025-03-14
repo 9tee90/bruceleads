@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { userIds, title, message, type, data } = body;
+    const { userIds, title, message, type } = body;
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0 || !title || !message) {
       throw new ApiError(400, 'User IDs, title, and message are required');
@@ -134,7 +134,6 @@ export async function POST(req: NextRequest) {
             title,
             message,
             type,
-            data,
           },
         }),
       ),

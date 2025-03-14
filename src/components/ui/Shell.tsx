@@ -1,0 +1,1 @@
+export { default as Shell } from '@/components/layout/AppLayout'; 

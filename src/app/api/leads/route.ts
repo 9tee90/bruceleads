@@ -1,57 +1,58 @@
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { validateRequest, successResponse, errorResponse } from '@/lib/api';
 import { Prisma, LeadStatus } from '@prisma/client';
+import { NextResponse } from 'next/server';
 
 // Mock data for demo users
 const mockLeads = [
   {
-    id: "1",
-    name: "Sarah Chen",
-    company: "TechGrowth Inc",
-    title: "VP of Engineering",
-    email: "sarah.chen@techgrowth.com",
-    phone: "+1 (555) 123-4567",
-    status: "QUALIFIED",
-    source: "AI Trigger",
+    id: '1',
+    name: 'Sarah Chen',
+    company: 'TechGrowth Inc',
+    title: 'VP of Engineering',
+    email: 'sarah.chen@techgrowth.com',
+    phone: '+1 (555) 123-4567',
+    status: 'QUALIFIED',
+    source: 'AI Trigger',
     score: 85,
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     lastContactedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     companyData: {
-      industry: "Software",
-      size: "50-200",
-      location: "San Francisco, CA",
+      industry: 'Software',
+      size: '50-200',
+      location: 'San Francisco, CA',
     },
     triggerEvents: [
       {
-        type: "HIRING",
-        title: "Engineering Team Expansion",
-        description: "Posted 12 new engineering roles in the last 30 days",
-        impact: "HIGH",
+        type: 'HIRING',
+        title: 'Engineering Team Expansion',
+        description: 'Posted 12 new engineering roles in the last 30 days',
+        impact: 'HIGH',
         confidence: 92,
         timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
         signals: [
-          "Multiple senior engineering positions posted",
-          "LinkedIn job listings increased by 200%",
-          "Recent series B funding of $40M"
-        ]
-      }
+          'Multiple senior engineering positions posted',
+          'LinkedIn job listings increased by 200%',
+          'Recent series B funding of $40M',
+        ],
+      },
     ],
     recommendedActions: [
       {
-        type: "EMAIL",
-        template: "Congratulations on your recent funding and team expansion! I noticed you're scaling your engineering team - would you be interested in learning how other high-growth companies are using Bruce to streamline their sales operations?",
-        subject: "Re: Your Engineering Team Growth",
-        priority: "HIGH"
+        type: 'EMAIL',
+        template: 'Congratulations on your recent funding and team expansion! I noticed you\'re scaling your engineering team - would you be interested in learning how other high-growth companies are using Bruce to streamline their sales operations?',
+        subject: 'Re: Your Engineering Team Growth',
+        priority: 'HIGH',
       },
       {
-        type: "LINKEDIN",
-        message: "Hi Sarah, saw TechGrowth is rapidly expanding the engineering team. Would love to share how we're helping similar companies scale their sales operations efficiently.",
-        priority: "MEDIUM"
-      }
-    ]
+        type: 'LINKEDIN',
+        message: 'Hi Sarah, saw TechGrowth is rapidly expanding the engineering team. Would love to share how we\'re helping similar companies scale their sales operations efficiently.',
+        priority: 'MEDIUM',
+      },
+    ],
   },
   {
     id: "2",
@@ -137,35 +138,84 @@ const mockLeads = [
   }
 ];
 
+const MOCK_LEADS = [
+  {
+    id: '1',
+    name: 'John Smith',
+    email: 'john@example.com',
+    phone: '123-456-7890',
+    company: 'Acme Inc',
+    title: 'CEO',
+    status: 'NEW',
+    source: 'Website',
+    score: 85,
+  },
+  {
+    id: '2',
+    name: 'Jane Doe',
+    email: 'jane@example.com',
+    phone: '987-654-3210',
+    company: 'Tech Corp',
+    title: 'CTO',
+    status: 'CONTACTED',
+    source: 'LinkedIn',
+    score: 92,
+  },
+  {
+    id: '3',
+    name: 'Bob Wilson',
+    email: 'bob@example.com',
+    phone: '555-555-5555',
+    company: 'Dev Co',
+    title: 'Developer',
+    status: 'QUALIFIED',
+    source: 'Referral',
+    score: 78,
+  },
+];
+
+const MOCK_LEAD = {
+  id: '1',
+  firstName: 'John',
+  lastName: 'Smith',
+  email: 'john.smith@example.com',
+  phone: '+1234567890',
+  company: 'Acme Corp',
+  title: 'CEO',
+  location: 'New York',
+};
+
+const MOCK_LEAD_2 = {
+  id: '2',
+  firstName: 'Jane',
+  lastName: 'Doe',
+  email: 'jane.doe@example.com',
+  title: 'CTO',
+  company: 'Tech Inc',
+  phone: '+0987654321',
+  location: 'San Francisco',
+};
+
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 },
+    );
+  }
+
   try {
-    const session = await getServerSession(authOptions);
-    const user = validateRequest(session);
-
-    // Check if this is a demo user
-    const isDemoUser = session?.user?.email === "demo@bruceleads.com";
-
-    if (isDemoUser) {
-      return successResponse({
-        leads: mockLeads,
-        pagination: {
-          total: mockLeads.length,
-          page: 1,
-          limit: 10,
-          totalPages: 1,
-        },
-      });
-    }
-
     const searchParams = req.nextUrl.searchParams;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const status = searchParams.get("status") as LeadStatus | null;
-    const source = searchParams.get("source");
-    const search = searchParams.get("search");
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const status = searchParams.get('status') as LeadStatus | null;
+    const source = searchParams.get('source');
+    const search = searchParams.get('search');
 
     const where: Prisma.LeadWhereInput = {
-      userId: user.id,
+      userId: session.user.id,
       ...(status && { status }),
       ...(source && { source }),
       ...(search && {
@@ -183,18 +233,18 @@ export async function GET(req: NextRequest) {
         include: {
           companyData: true,
           activities: {
-            orderBy: { createdAt: "desc" },
+            orderBy: { createdAt: 'desc' },
             take: 1,
           },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
       prisma.lead.count({ where }),
     ]);
 
-    return successResponse({
+    return NextResponse.json({
       leads,
       pagination: {
         total,
@@ -204,32 +254,41 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json(
+      { error: 'Failed to fetch leads' },
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    const user = validateRequest(session);
+  const session = await getServerSession(authOptions);
 
+  if (!session) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 },
+    );
+  }
+
+  try {
     // Return mock response for demo users
-    if (session?.user?.email === "demo@bruceleads.com") {
+    if (session?.user?.email === 'demo@bruceleads.com') {
       const body = await req.json();
       const newLead = {
         id: (mockLeads.length + 1).toString(),
         ...body,
         createdAt: new Date().toISOString(),
         lastContactedAt: null,
-        status: "NEW" as LeadStatus,
+        status: 'NEW' as LeadStatus,
         score: Math.floor(Math.random() * 20) + 80, // Random score between 80-100
         companyData: {
-          industry: body.industry || "Technology",
-          size: body.companySize || "1-50",
-          location: body.location || "United States",
-        }
+          industry: body.industry || 'Technology',
+          size: body.companySize || '1-50',
+          location: body.location || 'United States',
+        },
       };
-      return successResponse(newLead, 201);
+      return NextResponse.json(newLead, { status: 201 });
     }
 
     const body = await req.json();
@@ -238,12 +297,12 @@ export async function POST(req: NextRequest) {
       company: body.company,
       title: body.title,
       email: body.email,
-      status: "NEW",
+      status: 'NEW',
       user: {
         connect: {
-          id: user.id
-        }
-      }
+          id: session.user.id,
+        },
+      },
     };
 
     const lead = await prisma.lead.create({
@@ -253,8 +312,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return successResponse(lead, 201);
+    return NextResponse.json(lead, { status: 201 });
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json(
+      { error: 'Failed to create lead' },
+      { status: 500 },
+    );
   }
 }

@@ -1,68 +1,84 @@
-import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { validateRequest, successResponse, errorResponse } from '@/lib/api';
+import { NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    const user = validateRequest(session);
+const MOCK_CAMPAIGNS = [
+  {
+    id: '1',
+    name: 'Welcome Campaign',
+    description: 'Initial outreach to new leads',
+    status: 'ACTIVE',
+    type: 'EMAIL',
+    metrics: {
+      sent: 150,
+      opened: 89,
+      clicked: 45,
+      replied: 23,
+    },
+  },
+  {
+    id: '2',
+    name: 'Follow-up Campaign',
+    description: 'Follow up with qualified leads',
+    status: 'DRAFT',
+    type: 'EMAIL',
+    metrics: {
+      sent: 0,
+      opened: 0,
+      clicked: 0,
+      replied: 0,
+    },
+  },
+];
 
-    const searchParams = req.nextUrl.searchParams;
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const status = searchParams.get('status');
+export async function GET() {
+  const session = await getServerSession(authOptions);
 
-    const where = {
-      userId: user.id,
-      ...(status && { status }),
-    };
-
-    const [campaigns, total] = await Promise.all([
-      prisma.campaign.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.campaign.count({ where }),
-    ]);
-
-    return successResponse({
-      campaigns,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    return errorResponse(error as Error);
+  if (!session) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 },
+    );
   }
+
+  return NextResponse.json(MOCK_CAMPAIGNS);
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 },
+    );
+  }
+
   try {
-    const session = await getServerSession(authOptions);
-    const user = validateRequest(session);
-
     const body = await req.json();
-    const { name, description, template, schedule } = body;
+    const { name, description, type } = body;
 
-    const campaign = await prisma.campaign.create({
-      data: {
-        name,
-        description,
-        template,
-        schedule,
-        userId: user.id,
+    const newCampaign = {
+      id: String(MOCK_CAMPAIGNS.length + 1),
+      name,
+      description,
+      status: 'DRAFT',
+      type: type || 'EMAIL',
+      metrics: {
+        sent: 0,
+        opened: 0,
+        clicked: 0,
+        replied: 0,
       },
-    });
+    };
 
-    return successResponse(campaign, 201);
+    MOCK_CAMPAIGNS.push(newCampaign);
+
+    return NextResponse.json(newCampaign);
   } catch (error) {
-    return errorResponse(error as Error);
+    return NextResponse.json(
+      { error: 'Failed to create campaign' },
+      { status: 500 },
+    );
   }
 }

@@ -6,6 +6,8 @@ import { Save, Loader2, Bell, Mail, Users, Target, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 
+export const dynamic = 'force-dynamic';
+
 interface Settings {
   notifications: {
     email: boolean;
@@ -37,7 +39,7 @@ interface Settings {
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
-  const [settings, setSettings] = useState<Settings>({});
+  const [settings, setSettings] = useState<Settings | null>(null);
   const { data: _session } = useSession();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -45,14 +47,14 @@ export default function SettingsPage() {
     emailAlerts: true,
     leadNotifications: true,
     weeklyDigest: false,
-    triggerAlerts: true
+    triggerAlerts: true,
   });
 
   const [preferences, setPreferences] = useState({
     minCompanySize: '51-200',
     targetIndustries: ['Software', 'Data Analytics', 'Cloud Computing'],
     minLeadScore: 75,
-    autoEnrichment: true
+    autoEnrichment: true,
   });
 
   useEffect(() => {
@@ -64,8 +66,8 @@ export default function SettingsPage() {
       setLoading(true);
       const response = await fetch('/api/settings');
       if (!response.ok) {
-throw new Error('Failed to fetch settings');
-}
+        throw new Error('Failed to fetch settings');
+      }
       const data = await response.json();
       setSettings(data.data);
     } catch (error) {
@@ -88,8 +90,8 @@ throw new Error('Failed to fetch settings');
       });
 
       if (!response.ok) {
-throw new Error('Failed to save settings');
-}
+        throw new Error('Failed to save settings');
+      }
       // TODO: Show success toast
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -102,8 +104,8 @@ throw new Error('Failed to save settings');
   const handleChange = (section: keyof Settings, key: string, value: any) => {
     setSettings((prev) => {
       if (!prev) {
-return prev;
-}
+        return prev;
+      }
       return {
         ...prev,
         [section]: {
@@ -117,7 +119,7 @@ return prev;
   const handleNotificationChange = (key: keyof typeof notifications) => {
     setNotifications(prev => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: !prev[key],
     }));
   };
 
@@ -130,8 +132,8 @@ return prev;
   }
 
   if (!settings) {
-return null;
-}
+    return null;
+  }
 
   return (
     <div className="space-y-6">
@@ -264,7 +266,7 @@ return null;
                           ...prev,
                           targetIndustries: e.target.checked
                             ? [...prev.targetIndustries, industry]
-                            : prev.targetIndustries.filter(i => i !== industry)
+                            : prev.targetIndustries.filter(i => i !== industry),
                         }));
                       }}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"

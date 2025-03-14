@@ -9,18 +9,21 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
 
-    const campaign = await prisma.campaign.findFirst({
+    const task = await prisma.task.findFirst({
       where: {
         id: params.id,
         userId: user.id,
       },
+      include: {
+        lead: true,
+      },
     });
 
-    if (!campaign) {
-      throw new ApiError(404, 'Campaign not found');
+    if (!task) {
+      throw new ApiError(404, 'Task not found');
     }
 
-    return successResponse(campaign);
+    return successResponse(task);
   } catch (error) {
     return errorResponse(error as Error);
   }
@@ -31,34 +34,36 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
 
-    const campaign = await prisma.campaign.findFirst({
+    const task = await prisma.task.findFirst({
       where: {
         id: params.id,
         userId: user.id,
       },
     });
 
-    if (!campaign) {
-      throw new ApiError(404, 'Campaign not found');
+    if (!task) {
+      throw new ApiError(404, 'Task not found');
     }
 
     const body = await req.json();
-    const { name, description, template, schedule, status } = body;
+    const { title, dueDate, completed, leadId } = body;
 
-    const updatedCampaign = await prisma.campaign.update({
+    const updatedTask = await prisma.task.update({
       where: {
         id: params.id,
       },
       data: {
-        name,
-        description,
-        template,
-        schedule,
-        status,
+        title,
+        dueDate,
+        completed,
+        leadId,
+      },
+      include: {
+        lead: true,
       },
     });
 
-    return successResponse(updatedCampaign);
+    return successResponse(updatedTask);
   } catch (error) {
     return errorResponse(error as Error);
   }
@@ -69,24 +74,24 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
 
-    const campaign = await prisma.campaign.findFirst({
+    const task = await prisma.task.findFirst({
       where: {
         id: params.id,
         userId: user.id,
       },
     });
 
-    if (!campaign) {
-      throw new ApiError(404, 'Campaign not found');
+    if (!task) {
+      throw new ApiError(404, 'Task not found');
     }
 
-    await prisma.campaign.delete({
+    await prisma.task.delete({
       where: {
         id: params.id,
       },
     });
 
-    return successResponse({ message: 'Campaign deleted successfully' });
+    return successResponse({ message: 'Task deleted successfully' });
   } catch (error) {
     return errorResponse(error as Error);
   }

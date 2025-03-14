@@ -1,141 +1,97 @@
 import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
-import { validateRequest, successResponse, errorResponse, ApiError } from '@/lib/api';
+import { validateRequest } from '@/lib/api';
+import { prisma } from '@/lib/prisma';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     const user = validateRequest(session);
+    
+    const body = await request.json();
+    const { primaryLeadId, secondaryLeadId } = body;
 
-    const body = await req.json();
-    const { sourceLeadId, targetLeadId, mergeStrategy } = body;
-
-    if (!sourceLeadId || !targetLeadId) {
-      throw new ApiError(400, 'Source and target lead IDs are required');
+    if (!primaryLeadId || !secondaryLeadId) {
+      return NextResponse.json({ error: 'Both primary and secondary lead IDs are required' }, { status: 400 });
     }
 
     // Get both leads
-    const [sourceLead, targetLead] = await Promise.all([
+    const [primaryLead, secondaryLead] = await Promise.all([
       prisma.lead.findFirst({
         where: {
-          id: sourceLeadId,
-          userId: user.id,
+          id: primaryLeadId,
+          userId: user.id
         },
         include: {
-          companyData: true,
           activities: true,
-        },
+          tasks: true,
+          companyData: true
+        }
       }),
       prisma.lead.findFirst({
         where: {
-          id: targetLeadId,
-          userId: user.id,
+          id: secondaryLeadId,
+          userId: user.id
         },
         include: {
-          companyData: true,
           activities: true,
-        },
-      }),
+          tasks: true,
+          companyData: true
+        }
+      })
     ]);
 
-    if (!sourceLead || !targetLead) {
-      throw new ApiError(404, 'One or both leads not found');
+    if (!primaryLead || !secondaryLead) {
+      return NextResponse.json({ error: 'One or both leads not found' }, { status: 404 });
     }
 
-    // Merge data based on strategy
-    const mergedData = {
-      // Always keep target lead's ID and creation date
-      id: targetLead.id,
-      createdAt: targetLead.createdAt,
-      updatedAt: new Date(),
-      userId: user.id,
+    // Move activities and tasks to primary lead
+    await prisma.$transaction([
+      // Move activities
+      ...secondaryLead.activities.map(activity =>
+        prisma.activity.update({
+          where: { id: activity.id },
+          data: { leadId: primaryLeadId }
+        })
+      ),
+      // Move tasks
+      ...secondaryLead.tasks.map(task =>
+        prisma.task.update({
+          where: { id: task.id },
+          data: { leadId: primaryLeadId }
+        })
+      ),
+      // Delete secondary lead's company data if it exists
+      ...(secondaryLead.companyData
+        ? [prisma.company.delete({ where: { leadId: secondaryLeadId } })]
+        : []),
+      // Delete secondary lead
+      prisma.lead.delete({
+        where: { id: secondaryLeadId }
+      })
+    ]);
 
-      // Merge basic information
-      name: mergeStrategy?.name === 'source' ? sourceLead.name : targetLead.name,
-      company: mergeStrategy?.company === 'source' ? sourceLead.company : targetLead.company,
-      title: mergeStrategy?.title === 'source' ? sourceLead.title : targetLead.title,
-      email: mergeStrategy?.email === 'source' ? sourceLead.email : targetLead.email,
-      phone: mergeStrategy?.phone === 'source' ? sourceLead.phone : targetLead.phone,
-      linkedinUrl:
-        mergeStrategy?.linkedinUrl === 'source' ? sourceLead.linkedinUrl : targetLead.linkedinUrl,
-
-      // Merge arrays and objects
-      tags: [...new Set([...targetLead.tags, ...sourceLead.tags])],
-      notes: [targetLead.notes, sourceLead.notes].filter(Boolean).join('\n\n'),
-
-      // Use the highest score
-      score: Math.max(sourceLead.score, targetLead.score),
-
-      // Use the most recent status unless specified
-      status: mergeStrategy?.status === 'source' ? sourceLead.status : targetLead.status,
-
-      // Use the most recent contact date
-      lastContactedAt:
-        sourceLead.lastContactedAt > targetLead.lastContactedAt
-          ? sourceLead.lastContactedAt
-          : targetLead.lastContactedAt,
-    };
-
-    // Start transaction
-    const mergedLead = await prisma.$transaction(async (tx) => {
-      // Update target lead with merged data
-      const updated = await tx.lead.update({
-        where: { id: targetLead.id },
-        data: mergedData,
-      });
-
-      // Merge company data if exists
-      if (sourceLead.companyData || targetLead.companyData) {
-        const mergedCompanyData = {
-          ...targetLead.companyData,
-          ...sourceLead.companyData,
-          leadId: targetLead.id,
-        };
-
-        await tx.company.upsert({
-          where: { leadId: targetLead.id },
-          create: mergedCompanyData,
-          update: mergedCompanyData,
-        });
-      }
-
-      // Move activities from source to target
-      if (sourceLead.activities.length > 0) {
-        await tx.activity.updateMany({
-          where: { leadId: sourceLead.id },
-          data: { leadId: targetLead.id },
-        });
-      }
-
-      // Create merge activity record
-      await tx.activity.create({
-        data: {
-          type: 'NOTE',
-          leadId: targetLead.id,
-          userId: user.id,
-          content: `Merged with lead "${sourceLead.name}" (${sourceLead.id})`,
-          metadata: {
-            mergeSource: sourceLead.id,
-            mergeStrategy,
-          },
+    // Get updated primary lead
+    const mergedLead = await prisma.lead.findUnique({
+      where: { id: primaryLeadId },
+      include: {
+        activities: {
+          orderBy: { createdAt: 'desc' }
         },
-      });
-
-      // Delete source lead
-      await tx.lead.delete({
-        where: { id: sourceLead.id },
-      });
-
-      return updated;
+        tasks: {
+          orderBy: { createdAt: 'desc' }
+        },
+        companyData: true
+      }
     });
 
-    return successResponse({
+    return NextResponse.json({
       message: 'Leads merged successfully',
-      lead: mergedLead,
+      lead: mergedLead
     });
   } catch (error) {
-    return errorResponse(error as Error);
+    console.error('Error merging leads:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

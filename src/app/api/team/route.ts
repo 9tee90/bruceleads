@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { validateRequest, successResponse, errorResponse, ApiError } from '@/lib/api';
@@ -12,7 +12,6 @@ export async function GET(_req: Request) {
     // Get team members
     const team = await prisma.user.findMany({
       where: {
-        company: user.company,
         id: {
           not: user.id, // Exclude current user
         },
@@ -23,17 +22,12 @@ export async function GET(_req: Request) {
         email: true,
         role: true,
         subscription: true,
-        createdAt: true,
-        lastActive: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
       },
     });
 
     return successResponse(team);
   } catch (error) {
-    return errorResponse('Failed to fetch team members', 500);
+    return errorResponse(error as Error);
   }
 }
 
@@ -69,7 +63,6 @@ export async function POST(req: NextRequest) {
         email,
         name,
         role,
-        company: user.company,
         subscription: {
           plan: 'free',
           status: 'trial',
@@ -82,7 +75,6 @@ export async function POST(req: NextRequest) {
         email: true,
         role: true,
         subscription: true,
-        createdAt: true,
       },
     });
 
@@ -113,7 +105,6 @@ export async function PATCH(req: NextRequest) {
     const teamMember = await prisma.user.findFirst({
       where: {
         id: userId,
-        company: user.company,
       },
     });
 
@@ -131,7 +122,6 @@ export async function PATCH(req: NextRequest) {
         email: true,
         role: true,
         subscription: true,
-        createdAt: true,
       },
     });
 
@@ -162,7 +152,6 @@ export async function DELETE(req: NextRequest) {
     const teamMember = await prisma.user.findFirst({
       where: {
         id: userId,
-        company: user.company,
       },
     });
 
