@@ -665,17 +665,17 @@ export default function Home() {
                 }}
                 className="flex gap-16 items-center"
               >
-                {[...Array(2)].map((_, setIndex) => (
+                {[...Array(3)].map((_, setIndex) => (
                   <div key={setIndex} className="flex gap-16 items-center">
                     {expertiseLogos.map((logo) => (
                       <div key={`${logo.alt}-${setIndex}`} className="flex-shrink-0">
                         <Image
                           src={logo.src}
                           alt={logo.alt}
-                          width={logo.width}
-                          height={logo.height}
+                          width={150}
+                          height={50}
                           className="h-8 md:h-10 w-auto opacity-60 hover:opacity-100 transition-opacity"
-                          quality={logo.quality}
+                          quality={90}
                         />
                       </div>
                     ))}
@@ -769,9 +769,9 @@ export default function Home() {
               whileHover={{ scale: 1.02 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="bg-gradient-to-b from-indigo-900/50 to-purple-900/50 backdrop-blur-xl rounded-2xl p-8 border border-indigo-500/20 relative overflow-hidden md:-mt-6"
+              className="bg-gradient-to-b from-indigo-900/50 to-purple-900/50 backdrop-blur-xl rounded-2xl p-8 border border-indigo-500/20 relative overflow-visible md:-mt-6"
             >
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-500 text-white px-4 py-1 rounded-full text-sm font-medium z-10">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-500 text-white px-6 py-1.5 rounded-full text-sm font-medium z-10">
                 Most Popular
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">Professional</h3>
