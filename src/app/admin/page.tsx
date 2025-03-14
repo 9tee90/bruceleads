@@ -1,16 +1,16 @@
-"use client";
-import { useState } from "react";
+'use client';
+import { useState } from 'react';
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const response = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
 
@@ -18,7 +18,7 @@ export default function AdminLogin() {
     if (data.error) {
       setMessage(data.error);
     } else {
-      setMessage("✅ Login Successful!");
+      setMessage('✅ Login Successful!');
     }
   };
 
@@ -42,7 +42,10 @@ export default function AdminLogin() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit" className="px-6 py-2 bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded shadow">
+        <button
+          type="submit"
+          className="px-6 py-2 bg-blue-500 hover:bg-blue-700 text-white font-semibold rounded shadow"
+        >
           Login
         </button>
       </form>

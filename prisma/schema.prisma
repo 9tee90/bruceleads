@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?   @db.Text
+  image         String?
+  role          Role      @default(USER)
+  settings      Json?
+  subscription  Json?
+  stripeCustomerId String? @unique
+  accounts      Account[]
+  sessions      Session[]
+  leads         Lead[]
+  activities    Activity[]
+  tasks         Task[]
+}
+
+model Lead {
+  id              String    @id @default(cuid())
+  name            String
+  email           String?
+  company         String?
+  title           String?
+  status          LeadStatus @default(NEW)
+  score           Int       @default(0)
+  lastContactedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activities      Activity[]
+  tasks           Task[]
+  companyData     Company?
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  website   String?
+  industry  String?
+  size      String?
+  location  String?
+  funding   Json?
+  leadId    String   @unique
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  type      ActivityType
+  content   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  title     String
+  dueDate   DateTime
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  USER
+  ADMIN
+  DEMO
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  LOST
+  WON
+}
+
+enum ActivityType {
+  EMAIL
+  CALL
+  NOTE
+  MEETING
+} 

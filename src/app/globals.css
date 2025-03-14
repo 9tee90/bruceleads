@@ -2,58 +2,318 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --card: #ffffff;
-  --card-foreground: #171717;
-  --popover: #ffffff;
-  --popover-foreground: #171717;
-  --primary: #0284c7;
-  --primary-foreground: #ffffff;
-  --secondary: #f3f4f6;
-  --secondary-foreground: #111827;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --accent: #f3f4f6;
-  --accent-foreground: #111827;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #0284c7;
-  --radius: 0.5rem;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #030712;
-    --foreground: #f9fafb;
-    --card: #111827;
-    --card-foreground: #f9fafb;
-    --popover: #111827;
-    --popover-foreground: #f9fafb;
-    --primary: #0ea5e9;
-    --primary-foreground: #030712;
-    --secondary: #1f2937;
-    --secondary-foreground: #f9fafb;
-    --muted: #1f2937;
-    --muted-foreground: #9ca3af;
-    --accent: #1f2937;
-    --accent-foreground: #f9fafb;
-    --destructive: #7f1d1d;
-    --destructive-foreground: #f9fafb;
-    --border: #1f2937;
-    --input: #1f2937;
-    --ring: #0ea5e9;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
   }
+  
+  html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
   }
+
+  /* Improve touch targets on mobile */
+  @media (max-width: 640px) {
+    button, a {
+      @apply min-h-[44px] min-w-[44px];
+    }
+  }
+}
+
+/* Custom scrollbar styles with mobile optimization */
+@media (min-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground rounded-full opacity-50;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
+}
+
+/* Optimized animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+  @apply will-change-transform;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+  will-change: opacity;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 20s linear infinite;
+  min-width: max-content;
+}
+
+/* Focus styles with better mobile touch feedback */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] transition-transform;
+}
+
+/* Typography with improved readability */
+.h1 {
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+  @apply break-words hyphens-auto;
+}
+
+.h2 {
+  @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0;
+  @apply break-words hyphens-auto;
+}
+
+.h3 {
+  @apply scroll-m-20 text-2xl font-semibold tracking-tight;
+  @apply break-words hyphens-auto;
+}
+
+.h4 {
+  @apply scroll-m-20 text-xl font-semibold tracking-tight;
+  @apply break-words hyphens-auto;
+}
+
+.p {
+  @apply leading-7 [&:not(:first-child)]:mt-6;
+  @apply break-words hyphens-auto;
+}
+
+.lead {
+  @apply text-xl text-muted-foreground;
+  @apply break-words hyphens-auto;
+}
+
+.large {
+  @apply text-lg font-semibold;
+}
+
+.small {
+  @apply text-sm font-medium leading-none;
+}
+
+.subtle {
+  @apply text-sm text-muted-foreground;
+}
+
+/* Form elements with improved mobile interaction */
+.input {
+  @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply sm:h-12 sm:text-base;
+}
+
+.textarea {
+  @apply flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply sm:text-base;
+}
+
+.select {
+  @apply flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply sm:h-12 sm:text-base;
+}
+
+.checkbox {
+  @apply h-5 w-5 rounded border border-primary text-primary ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply sm:h-4 sm:w-4;
+}
+
+.radio {
+  @apply h-5 w-5 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply sm:h-4 sm:w-4;
+}
+
+/* Badge variants with improved touch targets on mobile */
+.badge {
+  @apply inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  @apply sm:px-2.5 sm:py-0.5 sm:text-xs;
+}
+
+.badge-default {
+  @apply border-transparent bg-primary text-primary-foreground hover:bg-primary/80;
+}
+
+.badge-secondary {
+  @apply border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
+
+.badge-destructive {
+  @apply border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80;
+}
+
+.badge-outline {
+  @apply text-foreground;
+}
+
+/* Card styles with improved mobile layout */
+.card {
+  @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  @apply sm:rounded-xl;
+}
+
+.card-header {
+  @apply flex flex-col space-y-1.5 p-4 sm:p-6;
+}
+
+.card-title {
+  @apply text-xl sm:text-2xl font-semibold leading-none tracking-tight;
+}
+
+.card-description {
+  @apply text-sm text-muted-foreground;
+}
+
+.card-content {
+  @apply p-4 pt-0 sm:p-6 sm:pt-0;
+}
+
+.card-footer {
+  @apply flex items-center p-4 pt-0 sm:p-6 sm:pt-0;
+}
+
+/* Add smooth scrolling for anchor links */
+html {
+  scroll-padding-top: 80px; /* Adjust based on your header height */
+  @apply scroll-smooth;
+}
+
+/* Prevent content shift on loading */
+html {
+  @apply overflow-y-scroll;
+}
+
+/* Improve text selection */
+::selection {
+  @apply bg-primary/20 text-foreground;
+}
+
+/* Add momentum scrolling on iOS */
+body {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Optimize images */
+img {
+  @apply max-w-full h-auto;
 }

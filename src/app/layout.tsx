@@ -1,27 +1,22 @@
-import type { Metadata } from "next";
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import Providers from './providers';
+import './globals.css';
 
-const geistSans = GeistSans;
-const geistMono = GeistMono;
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Bruce Leads - AI-Powered Sales Intelligence",
-  description: "Discover high-intent leads and sales triggers with Bruce Leads AI",
+  title: 'Bruce Leads - Lead Generation Platform',
+  description: 'Automate your lead generation with Bruce Leads',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={inter.className}>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

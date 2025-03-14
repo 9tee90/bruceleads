@@ -1,7 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone", // ✅ Fix: Use standalone to support API routes
-  distDir: ".next",
+  reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'platform-lookaside.fbsbx.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.licdn.com',
+      },
+    ],
+  },
 };
 
 module.exports = nextConfig; 
