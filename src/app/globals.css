@@ -311,9 +311,43 @@ html {
 /* Add momentum scrolling on iOS */
 body {
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
 }
 
 /* Optimize images */
 img {
   @apply max-w-full h-auto;
+}
+
+/* Add hardware acceleration for animations */
+.force-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+}
+
+/* Add will-change hints for animations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-scroll {
+  will-change: scroll-position;
+}
+
+/* Optimize logo animations */
+.logo-animation {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+  will-change: transform, opacity;
+}
+
+.logo-container {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
 }

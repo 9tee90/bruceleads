@@ -152,44 +152,6 @@ const footerLinks = {
   ],
 };
 
-const expertiseLogos = [
-  {
-    src: '/logos/adobe.png',
-    alt: 'Adobe',
-    width: 150,
-    height: 50,
-    quality: 90
-  },
-  {
-    src: '/logos/microsoft.png',
-    alt: 'Microsoft',
-    width: 150,
-    height: 50,
-    quality: 90
-  },
-  {
-    src: '/logos/salesforce.png',
-    alt: 'Salesforce',
-    width: 150,
-    height: 50,
-    quality: 90
-  },
-  {
-    src: '/logos/meta.png',
-    alt: 'Meta',
-    width: 150,
-    height: 50,
-    quality: 90
-  },
-  {
-    src: '/logos/google.png',
-    alt: 'Google',
-    width: 150,
-    height: 50,
-    quality: 90
-  }
-];
-
 const orbitVariants = {
   animate: {
     rotate: 360,
@@ -648,41 +610,9 @@ export default function Home() {
             </motion.div>
           </div>
           
-          <div className="relative mt-16">
-            <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-gray-900 to-transparent z-10" />
-            <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-gray-900 to-transparent z-10" />
-            
-            <div className="overflow-hidden">
-              <motion.div
-                animate={{
-                  x: [0, -100 * expertiseLogos.length],
-                }}
-                transition={{
-                  duration: 30,
-                  repeat: Infinity,
-                  ease: "linear",
-                  repeatType: "loop"
-                }}
-                className="flex gap-16 items-center"
-              >
-                {[...Array(3)].map((_, setIndex) => (
-                  <div key={setIndex} className="flex gap-16 items-center">
-                    {expertiseLogos.map((logo) => (
-                      <div key={`${logo.alt}-${setIndex}`} className="flex-shrink-0">
-                        <Image
-                          src={logo.src}
-                          alt={logo.alt}
-                          width={150}
-                          height={50}
-                          className="h-8 md:h-10 w-auto opacity-60 hover:opacity-100 transition-opacity"
-                          quality={90}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </motion.div>
-            </div>
+          {/* Fixed Logo Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto items-center">
+            {/* Expertise Logos */}
           </div>
 
           <div className="mt-12 text-center">

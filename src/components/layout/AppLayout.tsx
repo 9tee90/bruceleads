@@ -1,12 +1,13 @@
 'use client';
 
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { LayoutDashboard, Users, Settings, BarChart3, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, BarChart3, LogOut, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -21,13 +22,31 @@ const navigation = [
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/');
+    }
+  }, [status, router]);
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
     router.push('/');
   };
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,7 +56,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r bg-card px-6">
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/dashboard" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold">Bruce Leads</span>
+              <Image
+                src="/logo.png"
+                alt="Bruce Leads"
+                width={32}
+                height={32}
+                className="w-8 h-8 transform-gpu"
+                priority
+              />
+              <span className="text-2xl font-bold">Bruce</span>
             </Link>
           </div>
 
@@ -68,12 +95,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <li className="mt-auto">
               <div className="flex items-center gap-x-4 px-2 py-3 text-sm font-semibold leading-6">
                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                  {session?.user?.name?.[0] || 'U'}
+                  {session.user?.name?.[0] || 'U'}
                 </div>
                 <span className="sr-only">Your profile</span>
                 <div className="flex-grow">
-                  <div className="text-foreground">{session?.user?.name}</div>
-                  <div className="text-xs text-muted-foreground">{session?.user?.email}</div>
+                  <div className="text-foreground">{session.user?.name || 'Demo User'}</div>
+                  <div className="text-xs text-muted-foreground">{session.user?.email}</div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleSignOut}>
                   <LogOut className="h-5 w-5" />

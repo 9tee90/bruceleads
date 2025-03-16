@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 50">
-  <rect x="10" y="10" width="30" height="30" fill="#f25022"/>
-  <rect x="45" y="10" width="30" height="30" fill="#7fba00"/>
-  <rect x="10" y="45" width="30" height="30" fill="#00a4ef"/>
-  <rect x="45" y="45" width="30" height="30" fill="#ffb900"/>
-  <text x="90" y="50" font-family="Arial" font-size="24" fill="#000">Microsoft</text>
-</svg> 

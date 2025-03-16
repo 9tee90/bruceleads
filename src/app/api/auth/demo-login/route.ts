@@ -1,33 +1,20 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { sign } from 'jsonwebtoken';
-import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key';
 
 export async function POST() {
   try {
-    // Create a demo user token without requiring database access
+    // Create a demo user with a unique ID
     const demoUser = {
-      id: 'demo-user-id',
+      id: `demo-${Date.now()}`,
       email: 'demo@bruceleads.com',
       name: 'Demo User',
       role: 'DEMO',
     };
 
     // Create a demo user session token
-    const token = sign(
-      {
-        id: demoUser.id,
-        email: demoUser.email,
-        name: demoUser.name,
-        role: demoUser.role,
-      },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    const token = sign(demoUser, JWT_SECRET, { expiresIn: '24h' });
 
     return NextResponse.json({
       success: true,

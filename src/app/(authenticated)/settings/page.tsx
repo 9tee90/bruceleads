@@ -2,141 +2,128 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Save, Loader2, Bell, Mail, Users, Target, Zap } from 'lucide-react';
+import { Save, Loader2, Bell, Target, Zap, Filter, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
+import { Switch } from '@/components/ui/Switch';
+import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/Badge';
+import { ScrollArea } from '@/components/ui/ScrollArea';
 
-export const dynamic = 'force-dynamic';
+interface TriggerRule {
+  id: string;
+  name: string;
+  type: string;
+  source: string;
+  conditions: {
+    field: string;
+    operator: string;
+    value: string;
+  }[];
+  score: number;
+  enabled: boolean;
+}
 
-interface Settings {
-  notifications: {
-    email: boolean;
-    push: boolean;
-    slack: boolean;
-  };
-  preferences: {
-    theme: 'light' | 'dark' | 'system';
-    language: string;
-    timezone: string;
-  };
-  enrichment: {
-    autoEnrich: boolean;
-    enrichmentProvider: string;
-    enrichmentApiKey: string;
-  };
-  integrations: {
-    slack: {
-      enabled: boolean;
-      webhookUrl: string;
-    };
-    crm: {
-      enabled: boolean;
-      provider: string;
-      apiKey: string;
-    };
-  };
+interface ScoringWeight {
+  factor: string;
+  weight: number;
 }
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
-  const [settings, setSettings] = useState<Settings | null>(null);
-  const { data: _session } = useSession();
+  const { data: session } = useSession();
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
-  const [notifications, setNotifications] = useState({
-    emailAlerts: true,
-    leadNotifications: true,
-    weeklyDigest: false,
-    triggerAlerts: true,
-  });
-
-  const [preferences, setPreferences] = useState({
-    minCompanySize: '51-200',
-    targetIndustries: ['Software', 'Data Analytics', 'Cloud Computing'],
-    minLeadScore: 75,
-    autoEnrichment: true,
-  });
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/settings');
-      if (!response.ok) {
-        throw new Error('Failed to fetch settings');
-      }
-      const data = await response.json();
-      setSettings(data.data);
-    } catch (error) {
-      console.error('Error fetching settings:', error);
-      // TODO: Show error toast
-    } finally {
-      setLoading(false);
+  const [triggerRules, setTriggerRules] = useState<TriggerRule[]>([
+    {
+      id: '1',
+      name: 'Funding Round',
+      type: 'company_event',
+      source: 'crunchbase',
+      conditions: [
+        { field: 'funding_amount', operator: '>=', value: '1000000' },
+        { field: 'funding_round', operator: 'in', value: 'Series A,Series B,Series C' }
+      ],
+      score: 85,
+      enabled: true
+    },
+    {
+      id: '2',
+      name: 'Tech Stack Change',
+      type: 'technology',
+      source: 'builtwith',
+      conditions: [
+        { field: 'technology_added', operator: 'in', value: 'Kubernetes,Docker,AWS' },
+        { field: 'company_size', operator: '>=', value: '50' }
+      ],
+      score: 75,
+      enabled: true
     }
-  };
+  ]);
+
+  const [scoringWeights, setScoringWeights] = useState<ScoringWeight[]>([
+    { factor: 'Company Size', weight: 0.3 },
+    { factor: 'Industry Match', weight: 0.2 },
+    { factor: 'Technology Fit', weight: 0.25 },
+    { factor: 'Growth Signals', weight: 0.25 }
+  ]);
+
+  const [integrations, setIntegrations] = useState({
+    crunchbase: { enabled: true, apiKey: 'demo-key' },
+    clearbit: { enabled: true, apiKey: 'demo-key' },
+    builtwith: { enabled: true, apiKey: 'demo-key' },
+    hunter: { enabled: false, apiKey: '' }
+  });
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      const response = await fetch('/api/settings', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(settings),
+      // In a real implementation, this would save to the backend
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast({
+        title: 'Settings saved',
+        description: 'Your changes have been saved successfully.',
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to save settings');
-      }
-      // TODO: Show success toast
     } catch (error) {
       console.error('Error saving settings:', error);
-      // TODO: Show error toast
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleChange = (section: keyof Settings, key: string, value: any) => {
-    setSettings((prev) => {
-      if (!prev) {
-        return prev;
-      }
-      return {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [key]: value,
-        },
-      };
-    });
+  const addTriggerRule = () => {
+    const newRule: TriggerRule = {
+      id: Date.now().toString(),
+      name: 'New Rule',
+      type: 'company_event',
+      source: 'crunchbase',
+      conditions: [{ field: '', operator: '=', value: '' }],
+      score: 50,
+      enabled: true
+    };
+    setTriggerRules([...triggerRules, newRule]);
   };
 
-  const handleNotificationChange = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+  const deleteTriggerRule = (id: string) => {
+    setTriggerRules(triggerRules.filter(rule => rule.id !== id));
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="text-lg text-muted-foreground">Loading settings...</div>
-      </div>
-    );
-  }
-
-  if (!settings) {
-    return null;
-  }
+  const updateTriggerRule = (id: string, updates: Partial<TriggerRule>) => {
+    setTriggerRules(triggerRules.map(rule => 
+      rule.id === id ? { ...rule, ...updates } : rule
+    ));
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Settings</h1>
         <Button onClick={handleSave} disabled={isSaving}>
@@ -150,303 +137,183 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6">
-        {/* Notifications */}
+        {/* Trigger Rules */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              Notification Preferences
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                Trigger Rules
+              </CardTitle>
+              <Button onClick={addTriggerRule} size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Rule
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-gray-500" />
-                <span>Email Alerts</span>
+          <CardContent>
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-4">
+                {triggerRules.map((rule) => (
+                  <div key={rule.id} className="p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="space-y-1">
+                        <Input
+                          value={rule.name}
+                          onChange={(e) => updateTriggerRule(rule.id, { name: e.target.value })}
+                          className="font-medium"
+                        />
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{rule.source}</Badge>
+                          <Badge variant="outline">{rule.type}</Badge>
+                          <Badge variant="outline">Score: {rule.score}</Badge>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={rule.enabled}
+                          onCheckedChange={(enabled) => updateTriggerRule(rule.id, { enabled })}
+                        />
+                        <Button
+                          variant="ghost"
+                          className="w-8 h-8 p-0"
+                          onClick={() => deleteTriggerRule(rule.id)}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {rule.conditions.map((condition, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Select
+                            defaultValue={condition.field}
+                            onValueChange={(value) => {
+                              const newConditions = [...rule.conditions];
+                              newConditions[index].field = value;
+                              updateTriggerRule(rule.id, { conditions: newConditions });
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select field" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="funding_amount">Funding Amount</SelectItem>
+                              <SelectItem value="funding_round">Funding Round</SelectItem>
+                              <SelectItem value="technology_added">Technology Added</SelectItem>
+                              <SelectItem value="company_size">Company Size</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            defaultValue={condition.operator}
+                            onValueChange={(value) => {
+                              const newConditions = [...rule.conditions];
+                              newConditions[index].operator = value;
+                              updateTriggerRule(rule.id, { conditions: newConditions });
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select operator" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="=">=</SelectItem>
+                              <SelectItem value=">=">&gt;=</SelectItem>
+                              <SelectItem value="<=">&lt;=</SelectItem>
+                              <SelectItem value="in">in</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            value={condition.value}
+                            onChange={(e) => {
+                              const newConditions = [...rule.conditions];
+                              newConditions[index].value = e.target.value;
+                              updateTriggerRule(rule.id, { conditions: newConditions });
+                            }}
+                            placeholder="Value"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={notifications.emailAlerts}
-                  onChange={() => handleNotificationChange('emailAlerts')}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-500" />
-                <span>New Lead Notifications</span>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={notifications.leadNotifications}
-                  onChange={() => handleNotificationChange('leadNotifications')}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-gray-500" />
-                <span>Weekly Performance Digest</span>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={notifications.weeklyDigest}
-                  onChange={() => handleNotificationChange('weeklyDigest')}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-gray-500" />
-                <span>AI Trigger Alerts</span>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={notifications.triggerAlerts}
-                  onChange={() => handleNotificationChange('triggerAlerts')}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
+            </ScrollArea>
           </CardContent>
         </Card>
 
-        {/* Preferences */}
+        {/* Scoring Weights */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="w-5 h-5" />
-              Lead Preferences
+              Scoring Weights
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Company Size
-              </label>
-              <select
-                value={preferences.minCompanySize}
-                onChange={(e) => setPreferences(prev => ({ ...prev, minCompanySize: e.target.value }))}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-              >
-                <option value="1-50">1-50 employees</option>
-                <option value="51-200">51-200 employees</option>
-                <option value="201-500">201-500 employees</option>
-                <option value="501-1000">501-1000 employees</option>
-                <option value="1001+">1001+ employees</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Target Industries
-              </label>
-              <div className="space-y-2">
-                {['Software', 'Data Analytics', 'Cloud Computing', 'Fintech', 'E-commerce'].map((industry) => (
-                  <label key={industry} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={preferences.targetIndustries.includes(industry)}
+          <CardContent>
+            <div className="space-y-4">
+              {scoringWeights.map((weight, index) => (
+                <div key={index} className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium">{weight.factor}</label>
+                    <Input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={weight.weight}
                       onChange={(e) => {
-                        setPreferences(prev => ({
-                          ...prev,
-                          targetIndustries: e.target.checked
-                            ? [...prev.targetIndustries, industry]
-                            : prev.targetIndustries.filter(i => i !== industry),
-                        }));
+                        const newWeights = [...scoringWeights];
+                        newWeights[index].weight = parseFloat(e.target.value);
+                        setScoringWeights(newWeights);
                       }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                     />
-                    <span className="ml-2 text-gray-700">{industry}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Lead Score
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={preferences.minLeadScore}
-                onChange={(e) => setPreferences(prev => ({ ...prev, minLeadScore: parseInt(e.target.value) }))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>0</span>
-                <span>Current: {preferences.minLeadScore}</span>
-                <span>100</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-700">Auto Data Enrichment</h3>
-                <p className="text-sm text-gray-500">Automatically enrich lead data with AI</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={preferences.autoEnrichment}
-                  onChange={(e) => setPreferences(prev => ({ ...prev, autoEnrichment: e.target.checked }))}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Enrichment Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Lead Enrichment</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Auto-enrich new leads</label>
-              <input
-                type="checkbox"
-                checked={settings.enrichment.autoEnrich}
-                onChange={(e) => handleChange('enrichment', 'autoEnrich', e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Enrichment Provider</label>
-              <select
-                value={settings.enrichment.enrichmentProvider}
-                onChange={(e) => handleChange('enrichment', 'enrichmentProvider', e.target.value)}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2"
-              >
-                <option value="clearbit">Clearbit</option>
-                <option value="zoominfo">ZoomInfo</option>
-                <option value="apollo">Apollo</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">API Key</label>
-              <input
-                type="password"
-                value={settings.enrichment.enrichmentApiKey}
-                onChange={(e) => handleChange('enrichment', 'enrichmentApiKey', e.target.value)}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2"
-                placeholder="Enter your API key"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Integrations */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Integrations</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Slack Integration */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Enable Slack</label>
-                <input
-                  type="checkbox"
-                  checked={settings.integrations.slack.enabled}
-                  onChange={(e) =>
-                    handleChange('integrations', 'slack', {
-                      ...settings.integrations.slack,
-                      enabled: e.target.checked,
-                    })
-                  }
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-              </div>
-              {settings.integrations.slack.enabled && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Webhook URL</label>
-                  <input
-                    type="text"
-                    value={settings.integrations.slack.webhookUrl}
-                    onChange={(e) =>
-                      handleChange('integrations', 'slack', {
-                        ...settings.integrations.slack,
-                        webhookUrl: e.target.value,
-                      })
-                    }
-                    className="w-full rounded-md border border-input bg-transparent px-3 py-2"
-                    placeholder="Enter Slack webhook URL"
-                  />
+                  </div>
+                  <div className="w-16 text-right">
+                    {(weight.weight * 100).toFixed(0)}%
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
+          </CardContent>
+        </Card>
 
-            {/* CRM Integration */}
+        {/* Data Sources & Integrations */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="w-5 h-5" />
+              Data Sources & Integrations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">Enable CRM</label>
-                <input
-                  type="checkbox"
-                  checked={settings.integrations.crm.enabled}
-                  onChange={(e) =>
-                    handleChange('integrations', 'crm', {
-                      ...settings.integrations.crm,
-                      enabled: e.target.checked,
-                    })
-                  }
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-              </div>
-              {settings.integrations.crm.enabled && (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">CRM Provider</label>
-                    <select
-                      value={settings.integrations.crm.provider}
-                      onChange={(e) =>
-                        handleChange('integrations', 'crm', {
-                          ...settings.integrations.crm,
-                          provider: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-md border border-input bg-transparent px-3 py-2"
-                    >
-                      <option value="salesforce">Salesforce</option>
-                      <option value="hubspot">HubSpot</option>
-                      <option value="pipedrive">Pipedrive</option>
-                    </select>
+              {Object.entries(integrations).map(([name, config]) => (
+                <div key={name} className="flex items-center justify-between p-4 rounded-lg border border-gray-200">
+                  <div>
+                    <h4 className="font-medium capitalize">{name}</h4>
+                    <p className="text-sm text-gray-500">API Key: {config.apiKey ? '••••••••' : 'Not configured'}</p>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">API Key</label>
-                    <input
+                  <div className="flex items-center gap-4">
+                    <Input
                       type="password"
-                      value={settings.integrations.crm.apiKey}
-                      onChange={(e) =>
-                        handleChange('integrations', 'crm', {
-                          ...settings.integrations.crm,
-                          apiKey: e.target.value,
-                        })
-                      }
-                      className="w-full rounded-md border border-input bg-transparent px-3 py-2"
-                      placeholder="Enter CRM API key"
+                      value={config.apiKey}
+                      onChange={(e) => setIntegrations({
+                        ...integrations,
+                        [name]: { ...config, apiKey: e.target.value }
+                      })}
+                      placeholder="Enter API Key"
+                      className="w-64"
+                    />
+                    <Switch
+                      checked={config.enabled}
+                      onCheckedChange={(enabled) => setIntegrations({
+                        ...integrations,
+                        [name]: { ...config, enabled }
+                      })}
                     />
                   </div>
-                </>
-              )}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

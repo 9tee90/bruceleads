@@ -1,50 +1,88 @@
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 
-const MOCK_TRIGGERS = [
+const mockTriggers = [
   {
     id: '1',
-    name: 'New Lead Follow-up',
-    description: 'Automatically follow up with new leads',
-    type: 'EMAIL',
-    status: 'ACTIVE',
-    conditions: {
-      leadStatus: 'NEW',
-      minScore: 70,
-    },
-    actions: {
-      type: 'SEND_EMAIL',
-      template: 'welcome',
-    },
+    company: 'TechCorp',
+    type: 'Funding Round',
+    source: 'Crunchbase',
+    description: 'Series B funding round of $50M',
+    score: 85,
+    timestamp: new Date().toISOString(),
+    signals: [
+      { type: 'funding_amount', value: '$50M', score: 40 },
+      { type: 'company_size', value: '100-500', score: 25 },
+      { type: 'growth_rate', value: '150%', score: 20 }
+    ],
+    status: 'new'
   },
   {
     id: '2',
-    name: 'High Value Lead Alert',
-    description: 'Alert team about high-value leads',
-    type: 'NOTIFICATION',
-    status: 'ACTIVE',
-    conditions: {
-      leadScore: 90,
-      companySize: '>100',
-    },
-    actions: {
-      type: 'SLACK_NOTIFICATION',
-      channel: 'sales-team',
-    },
+    company: 'DataFlow Inc',
+    type: 'Technology Stack',
+    source: 'BuiltWith',
+    description: 'Added Kubernetes to tech stack',
+    score: 75,
+    timestamp: new Date().toISOString(),
+    signals: [
+      { type: 'tech_adoption', value: 'Kubernetes', score: 35 },
+      { type: 'tech_stack_fit', value: 'High', score: 25 },
+      { type: 'company_intent', value: 'Strong', score: 15 }
+    ],
+    status: 'new'
   },
+  {
+    id: '3',
+    company: 'CloudScale',
+    type: 'Leadership Change',
+    source: 'LinkedIn',
+    description: 'New CTO appointed',
+    score: 90,
+    timestamp: new Date().toISOString(),
+    signals: [
+      { type: 'role_seniority', value: 'C-Level', score: 40 },
+      { type: 'department_match', value: 'Technology', score: 30 },
+      { type: 'timing', value: 'Optimal', score: 20 }
+    ],
+    status: 'new'
+  }
 ];
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
   if (!session) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 },
+    return new NextResponse(
+      JSON.stringify({ error: 'Authentication required' }),
+      { status: 401 }
     );
   }
 
-  return NextResponse.json(MOCK_TRIGGERS);
+  // For demo purposes, return mock data
+  return NextResponse.json(mockTriggers);
+}
+
+export async function PATCH(request: Request) {
+  const session = await getServerSession();
+
+  if (!session) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Authentication required' }),
+      { status: 401 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const { id, status } = body;
+
+    // For demo purposes, just return success
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return new NextResponse(
+      JSON.stringify({ error: 'Failed to update trigger event' }),
+      { status: 500 }
+    );
+  }
 } 
