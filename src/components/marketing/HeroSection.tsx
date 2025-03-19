@@ -19,58 +19,53 @@ const stats = [
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-transparent py-16 md:py-24">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-transparent py-24 lg:py-32">
       {/* Gradient Orb */}
       <div className="absolute inset-0 flex items-center justify-center opacity-20">
         <div className="w-[1000px] h-[1000px] bg-gradient-to-r from-blue-500/40 via-indigo-500/40 to-purple-500/40 rounded-full blur-[120px]" />
       </div>
-
-      {/* Grid Background */}
-      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:50px_50px]" />
       
-      <div className="container relative px-4 md:px-6 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+      <div className="container relative px-6 md:px-8 flex flex-col items-center justify-center min-h-screen">
         {/* Text content */}
         <motion.div 
-          className="flex-1 text-center lg:text-left space-y-8"
+          className="max-w-[800px] text-center space-y-8 md:space-y-10"
           initial="initial"
           animate="animate"
           variants={fadeInUp}
         >
-          <div className="space-y-4">
-            <motion.div 
-              className="inline-block px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                AI-Powered Sales Intelligence
+          <motion.div 
+            className="inline-block px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              AI-Powered Sales Intelligence
+            </span>
+          </motion.div>
+          
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.1] tracking-tight">
+            Transform Your Sales with{' '}
+            <span className="relative">
+              <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                Adaptive Intelligence™
               </span>
-            </motion.div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.2] tracking-tight">
-              Transform Your Sales with{' '}
-              <span className="relative">
-                <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-                  Adaptive Intelligence™
-                </span>
-                <motion.span 
-                  className="absolute -inset-1 bg-blue-500/20 blur-lg"
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </span>
-            </h1>
-            
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-              Bruce leverages real-time signals and AI to help you identify, engage, and convert high-intent prospects with unprecedented precision.
-            </p>
-          </div>
+              <motion.span 
+                className="absolute -inset-1 bg-blue-500/20 blur-lg"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </span>
+          </h1>
+          
+          <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Bruce leverages real-time signals and AI to help you identify, engage, and convert high-intent prospects with unprecedented precision.
+          </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Button
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25 text-lg px-8 h-14"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25 text-lg h-14 px-8 sm:px-10"
               onClick={() => window.open(CALENDLY_LINK, '_blank')}
             >
               Book a Demo
@@ -79,7 +74,7 @@ export default function HeroSection() {
             <Button
               size="lg"
               variant="outline"
-              className="border-white/10 bg-white/5 hover:bg-white/10 text-white text-lg h-14"
+              className="border-white/10 bg-white/5 hover:bg-white/10 text-white text-lg h-14 px-8 sm:px-10"
               onClick={() => {
                 const element = document.getElementById('how-it-works');
                 element?.scrollIntoView({ behavior: 'smooth' });
@@ -88,26 +83,26 @@ export default function HeroSection() {
               Learn More
             </Button>
           </div>
+        </motion.div>
 
-          {/* Stats */}
-          <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12 pt-8 border-t border-white/10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center lg:text-left">
-                <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
-                <div className="text-sm text-gray-400">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
+        {/* Stats */}
+        <motion.div 
+          className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-3 gap-8 mt-20 lg:mt-24 pt-8 border-t border-white/10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          {stats.map((stat, index) => (
+            <div key={index} className="text-center">
+              <div className="text-4xl font-bold text-white mb-2">{stat.value}</div>
+              <div className="text-base text-gray-400">{stat.label}</div>
+            </div>
+          ))}
         </motion.div>
 
         {/* Animation */}
         <motion.div 
-          className="flex-1 w-full max-w-xl lg:max-w-2xl aspect-square relative"
+          className="w-full max-w-3xl aspect-[2/1] mt-20 lg:mt-24"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
