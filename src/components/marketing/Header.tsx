@@ -11,7 +11,8 @@ import Image from 'next/image';
 const navItems = [
   { href: '#how-it-works', label: 'How it Works' },
   { href: '#roi', label: 'ROI Calculator' },
-  { href: '#comparison', label: 'Compare' },
+  { href: '#pricing', label: 'Pricing' },
+  { href: '#testimonials', label: 'Testimonials' },
 ];
 
 const CALENDLY_LINK = 'https://calendly.com/beyondbusinessgroup/30min';

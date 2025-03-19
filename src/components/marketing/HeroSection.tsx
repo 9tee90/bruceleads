@@ -22,7 +22,7 @@ export default function HeroSection() {
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-transparent py-16 md:py-24">
       {/* Gradient Orb */}
       <div className="absolute inset-0 flex items-center justify-center opacity-20">
-        <div className="w-[1000px] h-[1000px] bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full blur-[120px]" />
+        <div className="w-[1000px] h-[1000px] bg-gradient-to-r from-blue-500/40 via-indigo-500/40 to-purple-500/40 rounded-full blur-[120px]" />
       </div>
 
       {/* Grid Background */}

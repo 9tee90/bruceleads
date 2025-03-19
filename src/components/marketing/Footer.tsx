@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 export default function Footer() {
   const [isLoading, setIsLoading] = useState(false);

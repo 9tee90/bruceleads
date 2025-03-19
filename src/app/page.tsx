@@ -23,7 +23,7 @@ import { signIn } from 'next-auth/react';
 import { AITriggerAnimation } from '@/components/marketing/AITriggerAnimation';
 import ROICalculator from '@/components/marketing/ROICalculator';
 import { Suspense } from 'react';
-import Header from '@/components/layout/Header';
+import Header from '@/components/marketing/Header';
 import ComparisonSection from '@/components/marketing/ComparisonSection';
 import Footer from '@/components/marketing/Footer';
 import { useToast } from '@/components/ui/use-toast';
@@ -164,10 +164,10 @@ const comparison = {
 const CALENDLY_LINK = 'https://calendly.com/beyondbusinessgroup/30min';
 
 const menuItems = [
-  { label: 'Why Bruce', href: '#why' },
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'ROI Calculator', href: '#roi' },
   { label: 'Pricing', href: '#pricing' },
+  { label: 'Testimonials', href: '#testimonials' },
   { label: 'Book Demo', href: CALENDLY_LINK, isExternal: true },
 ];
 
@@ -278,233 +278,217 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen bg-gray-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black">
-      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
-      
-      <Header />
-      
-      {/* Hero Section */}
-      <HeroSection />
-
-      {/* Why Adaptive Intent Intelligence™ Matters */}
-      <section id="why" className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 to-gray-800/50 backdrop-blur-sm" />
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:50px_50px]" />
+    <main className="relative min-h-screen bg-[#0B1120] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800/20 via-gray-900 to-black">
+      <div className="relative">
+        <Header />
         
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="inline-block px-4 py-1.5 mb-4 rounded-full border border-white/10 bg-white/5"
-            >
-              <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Next-Generation Sales Intelligence
-              </span>
-            </motion.div>
-            
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-4"
-            >
-              Why Adaptive Intent Intelligence™ Matters
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-4 text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed"
-            >
-              Traditional lead scoring is static and outdated. Bruce Leads' Adaptive Intent Intelligence™ 
-              continuously learns from market signals and your success patterns to identify the perfect 
-              moment for engagement.
-            </motion.p>
-          </div>
+        {/* Hero Section */}
+        <HeroSection />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
+        {/* Features Section */}
+        <section className="relative py-20 sm:py-24 bg-[#0B1120]/80">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16 sm:mb-20">
+              <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="relative group h-full"
+                transition={{ duration: 0.5 }}
+                className="text-3xl sm:text-4xl font-bold text-white mb-6"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                <div className={`absolute inset-0 bg-${feature.color}-500/10 rounded-2xl blur-xl group-hover:bg-${feature.color}-500/20 transition-all duration-300`} />
-                <div className="relative h-full p-6 rounded-2xl border border-white/10 hover:border-blue-500/50 transition-all duration-300 flex flex-col">
-                  <div className={`p-3 rounded-lg bg-gradient-to-br from-${feature.color}-500/20 to-${feature.color}-500/10 backdrop-blur-sm inline-block`}>
-                    <feature.icon className={`h-6 w-6 text-${feature.color}-400`} />
+                Why Adaptive Intent Intelligence™ Matters
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto"
+              >
+                Experience the future of sales with our cutting-edge AI technology
+              </motion.p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
+              {features.map((feature, index) => (
+                <motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="relative group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+                  <div className="relative bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 sm:p-8">
+                    <feature.icon className={`w-12 h-12 text-${feature.color}-500 mb-4`} />
+                    <h3 className="text-xl sm:text-2xl font-semibold text-white mb-3">{feature.title}</h3>
+                    <p className="text-gray-300">{feature.description}</p>
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold text-white">{feature.title}</h3>
-                  <p className="mt-2 text-gray-300 flex-grow leading-relaxed">{feature.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section id="how-it-works" className="py-24 bg-gray-800/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <ComparisonSection />
-        </div>
-      </section>
-
-      {/* ROI Calculator Section */}
-      <section id="roi" className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-900/50 to-gray-800/50 backdrop-blur-sm" />
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[length:50px_50px]" />
-        
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="inline-block px-4 py-1.5 mb-4 rounded-full border border-white/10 bg-white/5"
-            >
-              <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Calculate Your ROI
-              </span>
-            </motion.div>
-            
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-4"
-            >
-              See Your Potential Return on Investment
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-4 text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed"
-            >
-              Discover how Bruce can transform your sales metrics and drive revenue growth with our interactive ROI calculator.
-            </motion.p>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl blur-3xl" />
-            <div className="relative bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-              <ROICalculator />
+                </motion.div>
+              ))}
             </div>
           </div>
+        </section>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-12 text-center"
-          >
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25 text-lg px-8 h-14"
-              onClick={() => window.open(CALENDLY_LINK, '_blank')}
-            >
-              Book a Demo to Learn More
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing">
-        <PricingSection />
-      </section>
-
-      {/* Built by Sales Leaders */}
-      <section className="py-24 bg-gray-800">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl font-bold tracking-tight text-white sm:text-4xl"
-            >
-              Built by Sales Leaders,<br />for Sales Teams
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-4 text-lg text-gray-300 max-w-3xl mx-auto"
-            >
-              We've spent years in the trenches, just like you. Bruce combines real sales experience with cutting-edge AI to deliver what actually works.
-            </motion.p>
+        {/* How It Works */}
+        <section id="how-it-works" className="relative py-20 sm:py-24 bg-[#0B1120]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <ComparisonSection />
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
-            >
-              <div className="text-3xl font-bold text-white mb-2">15+ Years</div>
-              <div className="text-sm text-gray-400">Sales Leadership Experience</div>
-            </motion.div>
+        {/* ROI Calculator Section */}
+        <section id="roi" className="relative py-20 sm:py-24 bg-[#0B1120]/80">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="inline-block px-4 py-1.5 mb-4 rounded-full border border-white/10 bg-white/5"
+              >
+                <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Calculate Your ROI
+                </span>
+              </motion.div>
+              
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-4"
+              >
+                See Your Potential Return on Investment
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="mt-4 text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed"
+              >
+                Discover how Bruce can transform your sales metrics and drive revenue growth with our interactive ROI calculator.
+              </motion.p>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl blur-3xl" />
+              <div className="relative bg-gray-900/50 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+                <ROICalculator />
+              </div>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-center"
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mt-12 text-center"
             >
-              <div className="text-3xl font-bold text-white mb-2">$100M+</div>
-              <div className="text-sm text-gray-400">Revenue Generated</div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-center"
-            >
-              <div className="text-3xl font-bold text-white mb-2">10,000+</div>
-              <div className="text-sm text-gray-400">Deals Closed</div>
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25 text-lg px-8 h-14"
+                onClick={() => window.open(CALENDLY_LINK, '_blank')}
+              >
+                Book a Demo
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
             </motion.div>
           </div>
+        </section>
 
-          <div className="flex justify-center">
-            <Button
-              size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8"
-              onClick={() => window.open(CALENDLY_LINK, '_blank')}
-            >
-              Talk to Our Sales Team
-            </Button>
+        {/* Pricing Section */}
+        <section id="pricing" className="relative py-20 sm:py-24 bg-[#0B1120]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <PricingSection />
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Testimonials Section */}
-      <TestimonialsSection />
+        {/* Built by Sales Leaders */}
+        <section className="relative py-20 sm:py-24 bg-[#0B1120]/80">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16 sm:mb-20">
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-6"
+              >
+                Built by Sales Leaders,<br />for Sales Teams
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto"
+              >
+                We've spent years in the trenches, just like you. Bruce combines real sales experience with cutting-edge AI to deliver what actually works.
+              </motion.p>
+            </div>
 
-      {/* Footer */}
-      <Footer />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 mb-16 sm:mb-20">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-center p-6 sm:p-8 bg-gray-900/50 rounded-xl"
+              >
+                <div className="text-3xl sm:text-4xl font-bold text-white mb-2">15+ Years</div>
+                <div className="text-sm sm:text-base text-gray-400">Sales Leadership Experience</div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="text-center p-6 sm:p-8 bg-gray-900/50 rounded-xl"
+              >
+                <div className="text-3xl sm:text-4xl font-bold text-white mb-2">$100M+</div>
+                <div className="text-sm sm:text-base text-gray-400">Revenue Generated</div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="text-center p-6 sm:p-8 bg-gray-900/50 rounded-xl"
+              >
+                <div className="text-3xl sm:text-4xl font-bold text-white mb-2">10,000+</div>
+                <div className="text-sm sm:text-base text-gray-400">Deals Closed</div>
+              </motion.div>
+            </div>
+
+            <div className="flex justify-center">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25 text-lg px-8 h-14"
+                onClick={() => window.open(CALENDLY_LINK, '_blank')}
+              >
+                Book a Demo
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section id="testimonials" className="relative py-20 sm:py-24 bg-[#0B1120]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <TestimonialsSection />
+          </div>
+        </section>
+
+        {/* Footer */}
+        <Footer />
+      </div>
     </main>
   );
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { type ReactElement } from 'react';
 import Header from '@/components/marketing/Header';
 import Footer from '@/components/marketing/Footer';
@@ -8,9 +10,9 @@ export default function LegalLayout({
   children: React.ReactNode;
 }): ReactElement {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-[#0B1120]">
       <Header />
-      <main className="flex-grow bg-white py-16 sm:py-24">
+      <main className="flex-grow py-16 sm:py-24">
         <div className="mx-auto max-w-3xl px-6 lg:px-8">
           {children}
         </div>
