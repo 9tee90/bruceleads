@@ -36,6 +36,13 @@ import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import DashboardTabs from '@/components/dashboard/DashboardTabs';
+import LeadFilters from '@/components/dashboard/LeadFilters';
+import NextBestAction from '@/components/dashboard/NextBestAction';
+import BulkActions from '@/components/dashboard/BulkActions';
+import TriggerRules from '@/components/dashboard/TriggerRules';
+import OutreachPanel from '@/components/dashboard/OutreachPanel';
 
 interface Stat {
   name: string;
@@ -66,6 +73,59 @@ interface OutreachTemplate {
   icon: React.ElementType;
   content?: string;
   variables?: string[];
+}
+
+interface DemoData {
+  leads: Array<{
+    id: string;
+    name: string;
+    industry: string;
+    funding: string;
+    hiring: string;
+    techStack: string[];
+    intentScore: number;
+    status: string;
+    lastActivity: string;
+  }>;
+  triggers: Array<{
+    id: string;
+    type: string;
+    company: string;
+    details: string;
+    date: string;
+  }>;
+  actions: Array<{
+    id: string;
+    type: 'email' | 'linkedin' | 'meeting';
+    title: string;
+    description: string;
+    priority: 'high' | 'medium' | 'low';
+    dueDate: string;
+    template: string;
+  }>;
+}
+
+interface DashboardTabsProps {
+  leads: Array<{
+    id: string;
+    name: string;
+    industry: string;
+    funding: string;
+    hiring: string;
+    techStack: string[];
+    intentScore: number;
+    status: string;
+    lastActivity: string;
+  }>;
+  triggers: Array<{
+    id: string;
+    type: string;
+    company: string;
+    details: string;
+    date: string;
+  }>;
+  onLeadSelect: (leadId: string) => void;
+  selectedLeads: string[];
 }
 
 const stats: Stat[] = [
@@ -326,187 +386,32 @@ function getOutreachType(triggerType: string | undefined) {
 }
 
 export default function Dashboard() {
-  const [triggerEvents, setTriggerEvents] = useState<TriggerEvent[]>([]);
-  const [templates, setTemplates] = useState<OutreachTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [isDemoUser, setIsDemoUser] = useState(false);
+  const [demoData, setDemoData] = useState<DemoData | null>(null);
+  const [activeFeature, setActiveFeature] = useState<'leads' | 'triggers' | 'actions' | 'outreach'>('leads');
   const { toast } = useToast();
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [selectedSource, setSelectedSource] = useState<string>("all");
-  const router = useRouter();
-
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      setLoading(true);
-      // In a real implementation, these would be separate API calls
-      const mockTriggerEvents: TriggerEvent[] = [
-        {
-          id: "1",
-          company: "Acme Corp",
-          event: "New job posting for Sales Director",
-          type: "Job Posting",
-          companyId: "acme-corp",
-          timestamp: "2024-03-15T10:00:00Z",
-          score: 85,
-          source: "LinkedIn",
-          description: "Looking for a Sales Director to lead the enterprise sales team"
-        },
-        {
-          id: "2",
-          company: "TechStart Inc",
-          event: "Series A funding announcement",
-          type: "Funding Round",
-          companyId: "techstart",
-          timestamp: "2024-03-15T08:00:00Z",
-          score: 90,
-          source: "TechCrunch",
-          description: "$15M Series A led by Accel Partners"
-        },
-        {
-          id: "3",
-          company: "Global Solutions",
-          event: "New CTO appointment",
-          type: "New Hire",
-          companyId: "global-solutions",
-          timestamp: "2024-03-14T15:00:00Z",
-          score: 75,
-          source: "Company Website",
-          description: "Former VP of Engineering at AWS joins as CTO"
-        },
-      ];
-
-      const mockTemplates: OutreachTemplate[] = [
-        {
-          id: 1,
-          name: "Cold Email Sequence",
-          type: "Email",
-          stats: { sent: 245, opened: 156, replied: 42 },
-          icon: Mail,
-        },
-        {
-          id: 2,
-          name: "Sales Call Script",
-          type: "Call",
-          stats: { used: 89, connected: 34, meetings: 12 },
-          icon: Phone,
-        },
-        {
-          id: 3,
-          name: "LinkedIn Message",
-          type: "Social",
-          stats: { sent: 178, accepted: 92, responded: 45 },
-          icon: MessageSquare,
-        },
-      ];
-
-      setTriggerEvents(mockTriggerEvents);
-      setTemplates(mockTemplates);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load dashboard data',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
-
-  useEffect(() => {
-    const checkOnboardingStatus = async () => {
-      try {
-        const response = await fetch('/api/user/onboarding-status');
-        const data = await response.json();
-        setShowOnboarding(!data.completed);
-      } catch (error) {
-        console.error('Failed to check onboarding status:', error);
-      }
-    };
-
-    checkOnboardingStatus();
-  }, []);
-
-  const getStatusColor = (status: TriggerEvent['status']) => {
-    switch (status) {
-      case 'new': return 'bg-blue-500';
-      case 'reviewing': return 'bg-yellow-500';
-      case 'actioned': return 'bg-green-500';
-      case 'ignored': return 'bg-gray-500';
-      default: return 'bg-gray-500';
+    if (session?.user?.email === 'demo@bruceleads.com') {
+      setIsDemoUser(true);
+      // Fetch demo data from the session
+      fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.demoData) {
+            setDemoData(data.demoData);
+          }
+        })
+        .catch(console.error);
     }
-  };
-
-  const getScoreColor = (score?: number) => {
-    if (!score) return 'text-gray-500';
-    if (score >= 80) return 'text-green-500';
-    if (score >= 60) return 'text-yellow-500';
-    return 'text-red-500';
-  };
-
-  if (showOnboarding) {
-    return <OnboardingFlow onComplete={() => setShowOnboarding(false)} />;
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50/30 to-white dark:from-gray-900 dark:to-gray-800 p-6">
-        <div className="max-w-[1400px] mx-auto">
-          {/* Skeleton Loading */}
-          <div className="space-y-6">
-            {/* Header Skeleton */}
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                <div className="h-4 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-              </div>
-              <div className="flex gap-2">
-                <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-              </div>
-            </div>
-            
-            {/* Stats Grid Skeleton */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="p-6 rounded-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-transparent">
-                  <div className="space-y-3">
-                    <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                    <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Content Skeleton */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <div className="p-6 rounded-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-transparent">
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-6">
-                <div className="p-6 rounded-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-transparent">
-                  <div className="space-y-4">
-                    {[...Array(2)].map((_, i) => (
-                      <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [session]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50/30 to-white dark:from-gray-900 dark:to-gray-800 p-4 lg:p-6 space-y-6">
@@ -514,262 +419,144 @@ export default function Dashboard() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 max-w-[1400px] mx-auto mb-6">
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
-            Welcome Back
+            Welcome to Bruce
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">Your sales intelligence dashboard</p>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">
+            {isDemoUser ? 'Explore our AI-powered sales intelligence platform' : 'Your sales intelligence dashboard'}
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <ThemeToggle />
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.href = '/settings'} 
-            className="w-full sm:w-auto backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Configure Rules
-          </Button>
-          <Button 
-            onClick={fetchDashboardData} 
-            className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-600/20"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh Data
-          </Button>
-          <Button 
-            onClick={() => setShowOnboarding(true)} 
-            variant="outline"
-            className="w-full sm:w-auto backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all"
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Demo Onboarding
-          </Button>
+          {!isDemoUser && (
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/settings'} 
+              className="w-full sm:w-auto backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Configure Settings
+            </Button>
+          )}
+          {isDemoUser && (
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/settings'}
+              className="w-full sm:w-auto backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/50 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Configure API Keys
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-[1400px] mx-auto">
-        <Card className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-transparent hover:border-indigo-100 dark:hover:border-indigo-900 transition-all duration-300 group">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Triggers</CardTitle>
-            <div className="h-8 w-8 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{triggerEvents.length}</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-              <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-              +12% from last week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-transparent hover:border-indigo-100 dark:hover:border-indigo-900 transition-all duration-300 group">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Score</CardTitle>
-            <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">78.5</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-              <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-              +5 points improvement
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-transparent hover:border-indigo-100 dark:hover:border-indigo-900 transition-all duration-300 group">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
-            <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">65%</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Based on last 50 outreach</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-transparent hover:border-indigo-100 dark:hover:border-indigo-900 transition-all duration-300 group">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
-            <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Across 3 channels</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-[1400px] mx-auto">
-        {/* Trigger Events List */}
-        <div className="lg:col-span-2">
-          <Card className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-transparent">
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <CardTitle className="text-xl">Recent Trigger Events</CardTitle>
-                <div className="flex gap-2">
-                  <Select value={selectedSource} onValueChange={setSelectedSource}>
-                    <SelectTrigger className="min-w-[150px] bg-white/80 dark:bg-gray-900/80">
-                      <SelectValue placeholder="All Sources" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Sources</SelectItem>
-                      <SelectItem value="crunchbase">Crunchbase</SelectItem>
-                      <SelectItem value="linkedin">LinkedIn</SelectItem>
-                      <SelectItem value="builtwith">BuiltWith</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="outline" className="w-8 h-8 p-0 bg-white/80 dark:bg-gray-900/80">
-                    <Filter className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[600px] sm:h-[500px] pr-4">
-                <div className="space-y-4">
-                  {triggerEvents.map((event) => (
-                    <motion.div
-                      key={event.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-300"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-semibold">{event.company}</h3>
-                            <Badge variant="outline" className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">
-                              {event.type}
-                            </Badge>
-                            <span className={`text-sm font-medium ${getScoreColor(event.score)}`}>
-                              Score: {event.score}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{event.description}</p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Source: {event.source}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {formatTimestamp(event.timestamp)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <div className="flex items-center gap-2">
-                            <Link
-                              href={`/outreach/${getOutreachType(event.type)}?triggerId=${event.id}&companyId=${event.companyId}`}
-                              className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-                            >
-                              <Mail className="w-4 h-4" />
-                              Start Outreach
-                            </Link>
-                            <Link
-                              href={`/companies/${event.companyId}`}
-                              className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-700"
-                            >
-                              <Building2 className="w-4 h-4" />
-                              View Company
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+      {/* Feature Navigation */}
+      <div className="max-w-[1400px] mx-auto">
+        <div className="flex space-x-4 mb-6 overflow-x-auto pb-2">
+          <Button
+            variant={activeFeature === 'leads' ? 'default' : 'outline'}
+            onClick={() => setActiveFeature('leads')}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            <Users className="w-4 h-4" />
+            Smart Lead Discovery
+          </Button>
+          <Button
+            variant={activeFeature === 'triggers' ? 'default' : 'outline'}
+            onClick={() => setActiveFeature('triggers')}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            <Zap className="w-4 h-4" />
+            Intent Rules
+          </Button>
+          <Button
+            variant={activeFeature === 'actions' ? 'default' : 'outline'}
+            onClick={() => setActiveFeature('actions')}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            <Target className="w-4 h-4" />
+            Next Best Actions
+          </Button>
+          <Button
+            variant={activeFeature === 'outreach' ? 'default' : 'outline'}
+            onClick={() => setActiveFeature('outreach')}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            <Send className="w-4 h-4" />
+            Intelligent Outreach
+          </Button>
         </div>
 
-        {/* Outreach Panel */}
+        {/* Feature Content */}
         <div className="space-y-6">
-          <Card className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-transparent">
-            <CardHeader>
-              <CardTitle className="text-xl">Outreach Templates</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="email" className="w-full">
-                <TabsList className="w-full grid grid-cols-3 mb-4 bg-gray-100/50 dark:bg-gray-900/50 p-1 rounded-lg">
-                  <TabsTrigger value="email" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800">
-                    <Mail className="w-4 h-4" />
-                    <span className="hidden sm:inline">Email</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="linkedin" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800">
-                    <Linkedin className="w-4 h-4" />
-                    <span className="hidden sm:inline">LinkedIn</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="call" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800">
-                    <Phone className="w-4 h-4" />
-                    <span className="hidden sm:inline">Call</span>
-                  </TabsTrigger>
-                </TabsList>
-                <div className="space-y-4">
-                  {templates.map((template) => (
-                    <motion.div
-                      key={template.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-300"
-                    >
-                      <h4 className="font-medium mb-2">{template.name}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{template.content}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {template.variables?.map((variable) => (
-                          <Badge key={variable} variant="outline" className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
-                            {variable}
-                          </Badge>
-                        ))}
+          {activeFeature === 'leads' && (
+            <>
+              <LeadFilters />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {demoData?.leads.map(lead => (
+                  <Card key={lead.id} className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>{lead.name}</span>
+                        <Badge variant="outline" className="ml-2">
+                          {lead.intentScore}% Intent
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-500">{lead.industry}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {lead.techStack.map(tech => (
+                            <Badge key={tech} variant="secondary">{tech}</Badge>
+                          ))}
+                        </div>
+                        <div className="flex items-center justify-between mt-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedLeads(prev => 
+                              prev.includes(lead.id) 
+                                ? prev.filter(id => id !== lead.id)
+                                : [...prev, lead.id]
+                            )}
+                          >
+                            {selectedLeads.includes(lead.id) ? 'Selected' : 'Select'}
+                          </Button>
+                          <Button size="sm">View Details</Button>
+                        </div>
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-transparent">
-            <CardHeader>
-              <CardTitle className="text-xl">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Link href="/rules" className="w-full">
-                  <Button className="w-full justify-start hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" variant="outline">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Configure Trigger Rules
-                  </Button>
-                </Link>
-                <Link href="/team" className="w-full">
-                  <Button className="w-full justify-start hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" variant="outline">
-                    <Users className="w-4 h-4 mr-2" />
-                    Manage Team
-                  </Button>
-                </Link>
-                <Link href="/targets" className="w-full">
-                  <Button className="w-full justify-start hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" variant="outline">
-                    <Target className="w-4 h-4 mr-2" />
-                    Set Target Accounts
-                  </Button>
-                </Link>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </CardContent>
-          </Card>
+            </>
+          )}
+
+          {activeFeature === 'triggers' && (
+            <TriggerRules />
+          )}
+
+          {activeFeature === 'actions' && (
+            <div className="space-y-4">
+              {demoData?.actions.map(action => (
+                <NextBestAction key={action.id} action={action} />
+              ))}
+            </div>
+          )}
+
+          {activeFeature === 'outreach' && (
+            <OutreachPanel />
+          )}
         </div>
       </div>
 
-      {/* Mobile Navigation Badge */}
-      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-        {triggerEvents.filter(e => e.status === 'new').length}
-      </div>
+      {/* Bulk Actions */}
+      {selectedLeads.length > 0 && (
+        <div className="fixed bottom-6 right-6">
+          <BulkActions selectedLeads={selectedLeads.map(Number)} />
+        </div>
+      )}
     </div>
   );
 } 

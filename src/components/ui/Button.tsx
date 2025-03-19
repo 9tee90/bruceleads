@@ -1,54 +1,35 @@
-import React, { forwardRef } from 'react';
-import { Slot } from '@radix-ui/react-slot';
-import { cn } from '@/lib/utils';
+import * as React from "react"
+import { cn } from "@/lib/utils"
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  asChild?: boolean;
+  size?: 'default' | 'sm' | 'lg';
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    { 
-      className, 
-      variant = 'default', 
-      size = 'md', 
-      children, 
-      disabled, 
-      type = 'button',
-      asChild = false,
-      ...props 
-    },
-    ref,
-  ) => {
-    const Comp = asChild ? Slot : 'button';
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = 'default', size = 'default', ...props }, ref) => {
     return (
-      <Comp
-        type={type}
+      <button
         className={cn(
-          'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background',
+          'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
           {
-            'bg-primary text-primary-foreground hover:bg-primary/90': variant === 'default',
-            'border border-input hover:bg-accent hover:text-accent-foreground':
+            'bg-blue-600 text-white hover:bg-blue-500': variant === 'default',
+            'border border-gray-300 bg-white text-gray-900 hover:bg-gray-50':
               variant === 'outline',
-            'hover:bg-accent hover:text-accent-foreground': variant === 'ghost',
-            'h-9 px-3 text-sm': size === 'sm',
-            'h-10 px-4 py-2': size === 'md',
-            'h-11 px-8': size === 'lg',
+            'hover:bg-gray-100 text-gray-900': variant === 'ghost',
+            'h-10 py-2 px-4': size === 'default',
+            'h-8 px-3 text-sm': size === 'sm',
+            'h-12 px-8': size === 'lg',
           },
-          className,
+          className
         )}
         ref={ref}
-        disabled={disabled}
         {...props}
-      >
-        {children}
-      </Comp>
-    );
-  },
-);
+      />
+    )
+  }
+)
+Button.displayName = "Button"
 
-Button.displayName = 'Button';
-
-export { Button };
+export { Button }

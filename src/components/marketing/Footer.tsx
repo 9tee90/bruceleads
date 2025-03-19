@@ -2,27 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 
-const footerLinks = {
-  product: [
-    { label: 'How It Works', href: '#how-it-works' },
-    { label: 'ROI Calculator', href: '#roi' },
-    { label: 'Bruce vs. Market', href: '#comparison' },
-    { label: 'Book Demo', href: 'https://calendly.com/beyondbusinessgroup/30min', isExternal: true },
-  ],
-  legal: [
-    { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Terms of Service', href: '/terms' },
-  ],
-};
-
 export default function Footer() {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
 
   const handleDemoLogin = async () => {
@@ -56,7 +41,7 @@ export default function Footer() {
         description: 'You are now logged in as a demo user.',
       });
 
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('Demo login error:', error);
       toast({
@@ -70,35 +55,47 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Product</h3>
-            <ul className="space-y-2">
-              {footerLinks.product.map((link) => (
-                <li key={link.href}>
-                  {link.isExternal ? (
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-white transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link href={link.href} className="hover:text-white transition-colors">
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
+    <footer className="relative z-10 bg-gray-900 text-gray-300">
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="relative z-20">
+            <h3 className="text-xl font-semibold mb-6 text-white">Product</h3>
+            <ul className="space-y-4">
+              <li>
+                <a href="#why" className="block hover:text-white transition-colors duration-200">
+                  Why Bruce
+                </a>
+              </li>
+              <li>
+                <a href="#how-it-works" className="block hover:text-white transition-colors duration-200">
+                  How It Works
+                </a>
+              </li>
+              <li>
+                <a href="#roi" className="block hover:text-white transition-colors duration-200">
+                  ROI Calculator
+                </a>
+              </li>
+              <li>
+                <a href="#pricing" className="block hover:text-white transition-colors duration-200">
+                  Pricing
+                </a>
+              </li>
+              <li>
+                <a 
+                  href="https://calendly.com/bruceleads/demo" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block hover:text-white transition-colors duration-200"
+                >
+                  Book Demo
+                </a>
+              </li>
               <li>
                 <button
                   onClick={handleDemoLogin}
                   disabled={isLoading}
-                  className="text-left hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="block hover:text-white transition-colors duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <span className="flex items-center">
@@ -113,32 +110,35 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Legal</h3>
-            <ul className="space-y-2">
-              {footerLinks.legal.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="hover:text-white transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+          <div className="relative z-20">
+            <h3 className="text-xl font-semibold mb-6 text-white">Legal</h3>
+            <ul className="space-y-4">
+              <li>
+                <Link href="/privacy" className="block hover:text-white transition-colors duration-200">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="block hover:text-white transition-colors duration-200">
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Contact</h3>
-            <p className="mb-2">Questions? Get in touch:</p>
-            <a
-              href="mailto:hello@bruceleads.ai"
-              className="text-indigo-400 hover:text-indigo-300 transition-colors"
+          <div className="relative z-20">
+            <h3 className="text-xl font-semibold mb-6 text-white">Contact</h3>
+            <p className="mb-4 text-gray-400">Questions? Get in touch:</p>
+            <a 
+              href="mailto:hello@bruceleads.ai" 
+              className="block text-indigo-400 hover:text-indigo-300 transition-colors duration-200"
             >
               hello@bruceleads.ai
             </a>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-800 text-sm text-gray-400">
+        <div className="mt-12 pt-8 border-t border-gray-800 text-sm text-gray-400">
           <p>© {new Date().getFullYear()} Bruce Leads. All rights reserved.</p>
         </div>
       </div>

@@ -78,19 +78,34 @@ export default function Header() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              <Link
+              <a
                 key={item.href}
                 href={item.href}
                 className="text-gray-300 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-md px-2 py-1"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const element = document.querySelector(item.href);
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
               >
                 {item.label}
-              </Link>
+              </a>
             ))}
-            <Button asChild size="sm" className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300">
-              <Link href={CALENDLY_LINK} target="_blank" rel="noopener noreferrer">
+            <a
+              href={CALENDLY_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block"
+            >
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300"
+              >
                 Book a Demo
-              </Link>
-            </Button>
+              </Button>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -123,26 +138,36 @@ export default function Header() {
             >
               <div className="max-w-7xl mx-auto px-4 py-2 space-y-1">
                 {navItems.map((item) => (
-                  <Link
+                  <a
                     key={item.href}
                     href={item.href}
                     className="block w-full text-left px-4 py-3 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500"
-                    onClick={closeMenu}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const element = document.querySelector(item.href);
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                      }
+                      closeMenu();
+                    }}
                   >
                     {item.label}
-                  </Link>
+                  </a>
                 ))}
                 <div className="px-4 py-2">
-                  <Button asChild className="w-full justify-center bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300">
-                    <Link
-                      href={CALENDLY_LINK}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={closeMenu}
+                  <a
+                    href={CALENDLY_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full"
+                  >
+                    <Button 
+                      size="sm" 
+                      className="w-full justify-center bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300"
                     >
                       Book a Demo
-                    </Link>
-                  </Button>
+                    </Button>
+                  </a>
                 </div>
               </div>
             </motion.div>

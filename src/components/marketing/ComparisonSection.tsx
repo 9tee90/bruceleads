@@ -2,235 +2,222 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, ArrowRight, Zap } from 'lucide-react';
+import { Check, Zap, Brain, Target, Sparkles, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
-interface Feature {
-  name: string;
-  bruce: boolean;
-  others: boolean;
-  description: string;
-  category: string;
-}
+const CALENDLY_LINK = 'https://calendly.com/beyondbusinessgroup/30min';
 
-const features: Feature[] = [
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const features = [
   {
-    name: 'AI-Powered Lead Generation',
-    bruce: true,
-    others: false,
-    description:
-      'Identify high-quality leads using real-time company signals and buyer intent data',
-    category: 'Lead Generation',
+    title: "Adaptive Intent Intelligence",
+    description: "AI-powered signal detection that learns and adapts to your industry",
+    traditional: "Static rules and basic triggers",
+    benefits: [
+      "Real-time market signal analysis",
+      "Continuous learning system",
+      "Industry-specific intent models",
+      "Predictive scoring"
+    ],
+    icon: Brain,
+    color: "blue"
   },
   {
-    name: 'Real-time Company Signals',
-    bruce: true,
-    others: false,
-    description: 'Monitor hiring surges, funding rounds, and M&A activity',
-    category: 'Lead Generation',
+    title: "Smart Lead Discovery",
+    description: "Automatically identify and prioritize high-intent prospects",
+    traditional: "Manual list building and basic firmographic data",
+    benefits: [
+      "Multi-signal correlation",
+      "Automated lead scoring",
+      "Buying stage detection",
+      "Company fit analysis"
+    ],
+    icon: Target,
+    color: "purple"
   },
   {
-    name: 'Intent Data Tracking',
-    bruce: true,
-    others: false,
-    description: 'Track buying signals across the web to identify active buyers',
-    category: 'Lead Generation',
-  },
-  {
-    name: 'Automated Email Sequences',
-    bruce: true,
-    others: true,
-    description: 'Send personalized follow-ups based on prospect behavior',
-    category: 'Outreach',
-  },
-  {
-    name: 'Multi-Channel Outreach',
-    bruce: true,
-    others: true,
-    description: 'Engage prospects across email, LinkedIn, and phone',
-    category: 'Outreach',
-  },
-  {
-    name: 'Smart Lead Scoring',
-    bruce: true,
-    others: true,
-    description: 'Prioritize leads based on likelihood to convert',
-    category: 'Outreach',
-  },
-  {
-    name: 'AI-Powered Territory Management',
-    bruce: true,
-    others: false,
-    description: 'Automatically route leads based on rep performance and capacity',
-    category: 'Management',
-  },
-  {
-    name: 'Real-time Analytics',
-    bruce: true,
-    others: true,
-    description: 'Track campaign performance and ROI in real-time',
-    category: 'Management',
-  },
-  {
-    name: 'Team Collaboration Tools',
-    bruce: true,
-    others: false,
-    description: 'Share insights and collaborate on opportunities',
-    category: 'Management',
-  },
+    title: "Intelligent Outreach",
+    description: "Context-aware engagement recommendations",
+    traditional: "Template-based sequences",
+    benefits: [
+      "Personalized messaging",
+      "Optimal timing suggestions",
+      "Multi-channel orchestration",
+      "Response prediction"
+    ],
+    icon: Sparkles,
+    color: "indigo"
+  }
 ];
 
-const categories = Array.from(new Set(features.map((f) => f.category)));
+const pricingTiers = [
+  {
+    name: "Starter",
+    price: "$99",
+    period: "per month",
+    description: "Perfect for small sales teams",
+    features: [
+      "Up to 100 tracked companies",
+      "Basic intent signals",
+      "Email templates",
+      "Standard support"
+    ],
+    highlight: false
+  },
+  {
+    name: "Professional",
+    price: "$299",
+    period: "per month",
+    description: "For growing sales organizations",
+    features: [
+      "Up to 500 tracked companies",
+      "Advanced intent signals",
+      "Multi-channel templates",
+      "Priority support",
+      "Custom triggers",
+      "API access"
+    ],
+    highlight: true
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    period: "per month",
+    description: "For large sales teams",
+    features: [
+      "Unlimited tracked companies",
+      "Custom intent models",
+      "Advanced integrations",
+      "Dedicated support",
+      "Custom workflows",
+      "Full API access",
+      "SSO & advanced security"
+    ],
+    highlight: false
+  }
+];
 
 export default function ComparisonSection() {
-  const [selectedCategory, setSelectedCategory] = React.useState<string>('Lead Generation');
-  const [hoveredFeature, setHoveredFeature] = React.useState<string | null>(null);
-
-  const filteredFeatures = features.filter((f) => f.category === selectedCategory);
-
   return (
-    <section className="py-24 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Bruce is Different</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              See how Bruce's AI-powered approach transforms your sales process
-            </p>
-          </motion.div>
-        </div>
-
-        <div className="flex justify-center mb-12 space-x-4">
-          {categories.map((category) => (
-            <motion.button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-3 rounded-full text-sm font-medium transition-all ${
-                selectedCategory === category
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
-              }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {category}
-            </motion.button>
-          ))}
-        </div>
-
+    <div className="space-y-16">
+      {/* How It Works */}
+      <div className="text-center mb-16">
         <motion.div
-          className="bg-white rounded-2xl shadow-xl overflow-hidden"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
+          className="inline-block px-4 py-1.5 mb-4 rounded-full border border-white/10 bg-white/5"
         >
-          <div className="grid grid-cols-12 bg-gray-50 p-6 border-b border-gray-200">
-            <div className="col-span-6 font-semibold text-gray-900">Feature</div>
-            <div className="col-span-3 text-center font-semibold text-blue-600">
-              <div className="flex items-center justify-center gap-2">
-                <Zap className="w-5 h-5" />
-                Bruce
+          <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Intelligent Sales Process
+          </span>
+        </motion.div>
+        
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+          How Bruce Works
+        </h2>
+        <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          Experience how Bruce's adaptive AI transforms your sales process by learning and evolving with your unique market dynamics.
+        </p>
+      </div>
+
+      {/* Feature Comparison */}
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        className="grid gap-8 md:gap-12"
+      >
+        {features.map((feature, index) => (
+          <motion.div
+            key={feature.title}
+            variants={itemVariants}
+            className="group relative"
+          >
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-800/50 to-gray-900/50 rounded-2xl backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300" />
+            <div className={`absolute inset-0 bg-${feature.color}-500/10 rounded-2xl blur-xl group-hover:bg-${feature.color}-500/20 transition-all duration-300`} />
+            
+            {/* Content */}
+            <div className="relative p-8 rounded-2xl border border-white/10 hover:border-blue-500/50 transition-all duration-300">
+              <div className="flex flex-col md:flex-row md:items-start gap-8">
+                {/* Icon */}
+                <div className="flex-shrink-0">
+                  <div className={`w-16 h-16 rounded-xl bg-gradient-to-br from-${feature.color}-500/20 to-${feature.color}-500/10 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <feature.icon className={`w-8 h-8 text-${feature.color}-400`} />
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 space-y-6">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-white mb-3">{feature.title}</h3>
+                    <p className="text-lg text-gray-300 leading-relaxed">{feature.description}</p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {/* Bruce Benefits */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-blue-400 tracking-wider uppercase">WITH BRUCE</h4>
+                      <ul className="space-y-3">
+                        {feature.benefits.map((benefit) => (
+                          <li key={benefit} className="flex items-start gap-3">
+                            <div className="flex-shrink-0 p-1 rounded-full bg-green-500/10">
+                              <Check className="w-4 h-4 text-green-400" />
+                            </div>
+                            <span className="text-gray-300">{benefit}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Traditional Tools */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-gray-500 tracking-wider uppercase">TRADITIONAL TOOLS</h4>
+                      <div className="p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+                        <p className="text-gray-500 italic">{feature.traditional}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="col-span-3 text-center font-semibold text-gray-500">Others</div>
-          </div>
+          </motion.div>
+        ))}
+      </motion.div>
 
-          <div className="divide-y divide-gray-100">
-            {filteredFeatures.map((feature, index) => (
-              <motion.div
-                key={feature.name}
-                className="grid grid-cols-12 p-6 hover:bg-gray-50 transition-colors relative"
-                onMouseEnter={() => setHoveredFeature(feature.name)}
-                onMouseLeave={() => setHoveredFeature(null)}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <div className="col-span-6">
-                  <h3 className="font-medium text-gray-900">{feature.name}</h3>
-                  <motion.p
-                    className="text-sm text-gray-500 mt-1"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{
-                      height: hoveredFeature === feature.name ? 'auto' : 0,
-                      opacity: hoveredFeature === feature.name ? 1 : 0,
-                    }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {feature.description}
-                  </motion.p>
-                </div>
-
-                <div className="col-span-3 flex justify-center items-center">
-                  {feature.bruce ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', delay: index * 0.1 }}
-                      className="bg-green-100 p-2 rounded-full"
-                    >
-                      <Check className="w-5 h-5 text-green-600" />
-                    </motion.div>
-                  ) : (
-                    <motion.div className="bg-red-100 p-2 rounded-full">
-                      <X className="w-5 h-5 text-red-500" />
-                    </motion.div>
-                  )}
-                </div>
-
-                <div className="col-span-3 flex justify-center items-center">
-                  {feature.others ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', delay: index * 0.1 + 0.1 }}
-                      className="bg-gray-100 p-2 rounded-full"
-                    >
-                      <Check className="w-5 h-5 text-gray-600" />
-                    </motion.div>
-                  ) : (
-                    <motion.div className="bg-gray-100 p-2 rounded-full">
-                      <X className="w-5 h-5 text-gray-400" />
-                    </motion.div>
-                  )}
-                </div>
-
-                {hoveredFeature === feature.name && (
-                  <motion.div
-                    className="absolute inset-0 border-2 border-blue-500 rounded-lg pointer-events-none"
-                    layoutId="outline"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  />
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="mt-12 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="flex justify-center pt-8"
+      >
+        <Button
+          size="lg"
+          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg shadow-blue-500/25 text-lg px-8 h-14"
+          onClick={() => window.open(CALENDLY_LINK, '_blank')}
         >
-          <a
-            href="#book-demo"
-            className="inline-flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700 transition-colors"
-          >
-            <span>See Bruce in Action</span>
-            <ArrowRight className="w-4 h-4" />
-          </a>
-        </motion.div>
-      </div>
-    </section>
+          See It In Action
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Button>
+      </motion.div>
+    </div>
   );
 }
